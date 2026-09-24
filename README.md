@@ -1,18 +1,21 @@
-# [Nome do projeto]
+# BolsU
 
-[Escreva um ou dois  parágrafo resumindo o objetivo do seu projeto.]
+Desenvolver uma solução digital que auxilie jovens universitários no controle e planejamento de suas finanças pessoais, facilitando o registro, a organização e a visualização dos gastos e contribuindo para uma maior compreensão de seus hábitos financeiros.
 
 ## Alunos integrantes da equipe
 
-* [Nome completo do aluno 1]
-* [Nome completo do aluno 2]
-* [Nome completo do aluno 3]
-* [Nome completo do aluno 4]
+* [Diego Vitor Pinto Mariano Portella](https://github.com/diegovitorportella)
+* [Emanuel Phillipe Ribeiro Ferreira Carvalho](https://github.com/emanuel-phillipe)
+* [Gabriela Pinheiro Pierazolli](https://github.com/gpierazolli)
+* [Giovanna Marques Freire Barbosa](https://github.com/giomfb07)
+* [Maria Fernanda Melo e Reis](https://github.com/mafemelo)
+* [Nubia Torres de Oliveira](https://github.com/nubyoli)
 
 ## Professores responsáveis
 
-* [Nome completo do professor 1]
-* [Nome completo do professor 2]
+* Danilo de Quadros Maia Filho
+* Diego Augusto de Faria Barros
+* Laís Soares Caldeira
 
 ## Instruções de utilização
 

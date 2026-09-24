@@ -2,30 +2,38 @@ cff-version: 1.0.1
 message: Please cite this software using these metadata.
 title: 
 authors:
-  - family-names: 
-    given-names: 
-  - family-names: 
-    given-names: 
-  - family-names: 
-    given-names: 
-  - family-names: 
-    given-names: 
-  - family-names: 
-    given-names: 
-  - family-names: 
-    given-names:
+  - family-names: Pinto Mariano Portella
+    given-names: Diego Vitor
+  - family-names: Ribeiro Ferreira Carvalho
+    given-names: Emanuel Phillipe
+  - family-names: Pinheiro Pierazolli
+    given-names: Gabriela
+  - family-names: Marques Freire Barbosa
+    given-names: Giovanna
+  - family-names: Melo e Reis
+    given-names: Maria Fernanda
+  - family-names: Torres de Oliveira
+    given-names: Nubia
   - name-suffix: Professor
     affiliation: PUC Minas
-    family-names: 
-    given-names: 
+    family-names: de Quadros Maia Filho
+    given-names: Danilo
   - name-suffix: Professor
     affiliation: PUC Minas
-    family-names: 
-    given-names: 
+    family-names: de Faria Barros
+    given-names: Diego Augusto
+  - name-suffix: Professor
+    affiliation: PUC Minas
+    family-names: Soares Caldeira
+    given-names: Laís
 keywords:
-  - 
-  - 
-repository-code: 
+  - financeiro
+  - universitario
+  - jovem
+  - organizacao
+  - planilha
+  - planejamento
+repository-code: https://github.com/ICEI-PUC-Minas-PMGES-TI/pmg-es-2026-2-ti2-8243100-bolsu
 license: CC-BY-4.0
 version: 1.0.0
 date-released: 2022-07-14
