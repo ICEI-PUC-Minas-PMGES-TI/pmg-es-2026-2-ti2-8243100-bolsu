@@ -1,6 +1,6 @@
-# BolsU
+# Bolsu
 
-Desenvolver uma solução digital que auxilie jovens universitários no controle e planejamento de suas finanças pessoais, facilitando o registro, a organização e a visualização dos gastos e contribuindo para uma maior compreensão de seus hábitos financeiros.
+Solução digital para auxiliar jovens universitários no controle e planejamento de suas finanças pessoais, facilitando o registro, a organização e a visualização dos gastos e contribuindo para uma maior compreensão de seus hábitos financeiros.
 
 ## Alunos integrantes da equipe
 
