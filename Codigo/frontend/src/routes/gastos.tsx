@@ -98,14 +98,94 @@ function Donut({ itens, total }: { itens: Categoria[]; total: number }) {
 }
 
 function Gastos() {
-  const [periodo] = useState<Periodo>('Mês')
-  const total = DADOS[periodo].reduce((s, c) => s + c.valor, 0)
+  const [periodo, setPeriodo] = useState<Periodo>('Mês')
+
+  const categorias = DADOS[periodo]
+  const total = categorias.reduce((s, c) => s + c.valor, 0)
+  const restante = ORCAMENTO[periodo] - total
+  const grafico = ORDEM_GRAFICO.map((n) => categorias.find((c) => c.nome === n)!)
 
   return (
-    <div className="p-8">
-      <h1 className="text-2xl font-bold">Seus gastos</h1>
-      <p>{brl(total)}</p>
-      <Donut itens={ORDEM_GRAFICO.map((n) => DADOS[periodo].find((c) => c.nome === n)!)} total={total} />
+    <div className="min-h-screen bg-[#f6f9f7] text-slate-900" style={{ fontFamily: 'Manrope, sans-serif' }}>
+      <div className="mx-auto w-full max-w-2xl pb-28 lg:max-w-none lg:pb-12">
+        {/* Cabeçalho */}
+        <header className="border-b border-slate-200/70 bg-white px-5 pb-4 pt-8 lg:flex lg:items-center lg:justify-between lg:px-10 lg:py-6">
+          <h1 className="text-[22px] font-extrabold lg:text-3xl">Seus gastos</h1>
+          <div className="mt-4 flex gap-2 lg:mt-0">
+            {PERIODOS.map((p) => (
+              <button
+                key={p}
+                onClick={() => setPeriodo(p)}
+                className={`rounded-full px-4 py-1.5 text-[13px] font-semibold transition-colors ${
+                  p === periodo
+                    ? 'bg-emerald-500 text-white'
+                    : 'bg-slate-100 text-slate-500 hover:bg-slate-200'
+                }`}
+              >
+                {p}
+              </button>
+            ))}
+          </div>
+        </header>
+
+        <main className="mx-auto grid max-w-6xl gap-6 px-5 pt-5 lg:grid-cols-[380px_1fr] lg:items-start lg:gap-8 lg:px-10 lg:pt-8">
+          {/* Resumo + gráfico */}
+          <div className="space-y-6 lg:rounded-3xl lg:border lg:border-slate-100 lg:bg-white lg:p-6 lg:shadow-[0_2px_12px_rgba(15,23,42,0.06)]">
+            <div className="grid grid-cols-2 gap-3">
+              <div className="rounded-2xl border border-slate-200 bg-slate-100 p-4">
+                <p className="text-[11px] font-bold tracking-wider text-slate-500">GASTOS</p>
+                <p className="mt-1 text-xl font-extrabold">{brl(total)}</p>
+              </div>
+              <div className="rounded-2xl border border-emerald-200 bg-emerald-50 p-4">
+                <p className="text-[11px] font-bold tracking-wider text-emerald-700">RESTANTE</p>
+                <p
+                  className={`mt-1 text-xl font-extrabold ${
+                    restante >= 0 ? 'text-emerald-500' : 'text-red-500'
+                  }`}
+                >
+                  {brl(restante)}
+                </p>
+              </div>
+            </div>
+            <Donut itens={grafico} total={total} />
+          </div>
+
+          {/* Lista por categoria */}
+          <section>
+            <h2 className="mb-3 text-base font-extrabold lg:text-lg">Por categoria</h2>
+            <ul className="grid gap-3 sm:grid-cols-2">
+              {categorias.map(({ nome, valor, cor, icone: Icone }) => (
+                <li
+                  key={nome}
+                  className="flex items-center gap-3 rounded-2xl border border-slate-100 bg-white p-3.5 shadow-[0_2px_8px_rgba(15,23,42,0.08)]"
+                >
+                  <span
+                    className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-white"
+                    style={{ backgroundColor: cor }}
+                  >
+                    <Icone size={18} />
+                  </span>
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-sm font-bold">{nome}</p>
+                    <p className="text-xs text-slate-500">
+                      {Math.round((valor / total) * 100)}% dos gastos
+                    </p>
+                  </div>
+                  <span className="text-[15px] font-extrabold">{brl(valor)}</span>
+                </li>
+              ))}
+            </ul>
+          </section>
+        </main>
+      </div>
+
+      <button
+        aria-label="Adicionar gasto"
+        className="fixed bottom-6 right-5 z-20 flex h-12 items-center justify-center gap-2 rounded-full bg-emerald-500 px-3.5 font-bold text-white shadow-lg shadow-emerald-500/40 transition-transform active:scale-95 lg:bottom-8 lg:right-10 lg:px-5"
+      >
+        <Plus size={24} />
+        <span className="hidden lg:inline">Novo gasto</span>
+      </button>
     </div>
   )
 }
