@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as CadastroGastoRouteImport } from './routes/cadastro-gasto'
+import { Route as OrcamentoRouteImport } from './routes/orcamento'
 import { Route as TesteRouteImport } from './routes/teste'
 
 const IndexRoute = IndexRouteImport.update({
@@ -23,6 +24,11 @@ const CadastroGastoRoute = CadastroGastoRouteImport.update({
   path: '/cadastro-gasto',
   getParentRoute: () => rootRouteImport,
 } as any)
+const OrcamentoRoute = OrcamentoRouteImport.update({
+  id: '/orcamento',
+  path: '/orcamento',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const TesteRoute = TesteRouteImport.update({
   id: '/teste',
   path: '/teste',
@@ -32,30 +38,34 @@ const TesteRoute = TesteRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/cadastro-gasto': typeof CadastroGastoRoute
+  '/orcamento': typeof OrcamentoRoute
   '/teste': typeof TesteRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/cadastro-gasto': typeof CadastroGastoRoute
+  '/orcamento': typeof OrcamentoRoute
   '/teste': typeof TesteRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/cadastro-gasto': typeof CadastroGastoRoute
+  '/orcamento': typeof OrcamentoRoute
   '/teste': typeof TesteRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/cadastro-gasto' | '/teste'
+  fullPaths: '/' | '/cadastro-gasto' | '/orcamento' | '/teste'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/cadastro-gasto' | '/teste'
-  id: '__root__' | '/' | '/cadastro-gasto' | '/teste'
+  to: '/' | '/cadastro-gasto' | '/orcamento' | '/teste'
+  id: '__root__' | '/' | '/cadastro-gasto' | '/orcamento' | '/teste'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   CadastroGastoRoute: typeof CadastroGastoRoute
+  OrcamentoRoute: typeof OrcamentoRoute
   TesteRoute: typeof TesteRoute
 }
 
@@ -75,6 +85,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CadastroGastoRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/orcamento': {
+      id: '/orcamento'
+      path: '/orcamento'
+      fullPath: '/orcamento'
+      preLoaderRoute: typeof OrcamentoRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/teste': {
       id: '/teste'
       path: '/teste'
@@ -88,6 +105,7 @@ declare module '@tanstack/react-router' {
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   CadastroGastoRoute: CadastroGastoRoute,
+  OrcamentoRoute: OrcamentoRoute,
   TesteRoute: TesteRoute,
 }
 export const routeTree = rootRouteImport
