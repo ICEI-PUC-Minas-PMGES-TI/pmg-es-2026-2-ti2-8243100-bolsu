@@ -10,11 +10,17 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as CadastroGastoRouteImport } from './routes/cadastro-gasto'
 import { Route as TesteRouteImport } from './routes/teste'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CadastroGastoRoute = CadastroGastoRouteImport.update({
+  id: '/cadastro-gasto',
+  path: '/cadastro-gasto',
   getParentRoute: () => rootRouteImport,
 } as any)
 const TesteRoute = TesteRouteImport.update({
@@ -25,27 +31,31 @@ const TesteRoute = TesteRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/cadastro-gasto': typeof CadastroGastoRoute
   '/teste': typeof TesteRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/cadastro-gasto': typeof CadastroGastoRoute
   '/teste': typeof TesteRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/cadastro-gasto': typeof CadastroGastoRoute
   '/teste': typeof TesteRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/teste'
+  fullPaths: '/' | '/cadastro-gasto' | '/teste'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/teste'
-  id: '__root__' | '/' | '/teste'
+  to: '/' | '/cadastro-gasto' | '/teste'
+  id: '__root__' | '/' | '/cadastro-gasto' | '/teste'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  CadastroGastoRoute: typeof CadastroGastoRoute
   TesteRoute: typeof TesteRoute
 }
 
@@ -56,6 +66,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/cadastro-gasto': {
+      id: '/cadastro-gasto'
+      path: '/cadastro-gasto'
+      fullPath: '/cadastro-gasto'
+      preLoaderRoute: typeof CadastroGastoRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/teste': {
@@ -70,6 +87,7 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  CadastroGastoRoute: CadastroGastoRoute,
   TesteRoute: TesteRoute,
 }
 export const routeTree = rootRouteImport
