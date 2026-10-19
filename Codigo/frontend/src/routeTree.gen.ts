@@ -10,11 +10,17 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as Gastos_compartilhadosRouteImport } from './routes/gastos_compartilhados'
 import { Route as TesteRouteImport } from './routes/teste'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const Gastos_compartilhadosRoute = Gastos_compartilhadosRouteImport.update({
+  id: '/gastos_compartilhados',
+  path: '/gastos_compartilhados',
   getParentRoute: () => rootRouteImport,
 } as any)
 const TesteRoute = TesteRouteImport.update({
@@ -25,27 +31,31 @@ const TesteRoute = TesteRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/gastos_compartilhados': typeof Gastos_compartilhadosRoute
   '/teste': typeof TesteRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/gastos_compartilhados': typeof Gastos_compartilhadosRoute
   '/teste': typeof TesteRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/gastos_compartilhados': typeof Gastos_compartilhadosRoute
   '/teste': typeof TesteRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/teste'
+  fullPaths: '/' | '/gastos_compartilhados' | '/teste'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/teste'
-  id: '__root__' | '/' | '/teste'
+  to: '/' | '/gastos_compartilhados' | '/teste'
+  id: '__root__' | '/' | '/gastos_compartilhados' | '/teste'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  Gastos_compartilhadosRoute: typeof Gastos_compartilhadosRoute
   TesteRoute: typeof TesteRoute
 }
 
@@ -56,6 +66,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/gastos_compartilhados': {
+      id: '/gastos_compartilhados'
+      path: '/gastos_compartilhados'
+      fullPath: '/gastos_compartilhados'
+      preLoaderRoute: typeof Gastos_compartilhadosRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/teste': {
@@ -70,6 +87,7 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  Gastos_compartilhadosRoute: Gastos_compartilhadosRoute,
   TesteRoute: TesteRoute,
 }
 export const routeTree = rootRouteImport
