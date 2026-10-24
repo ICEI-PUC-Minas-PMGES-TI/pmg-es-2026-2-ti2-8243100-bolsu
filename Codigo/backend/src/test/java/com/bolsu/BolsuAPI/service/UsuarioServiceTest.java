@@ -1,12 +1,14 @@
 package com.bolsu.BolsuAPI.service;
 
-import com.bolsu.BolsuAPI.dto.UsuarioDTO;
+import com.bolsu.BolsuAPI.dto.UsuarioRequestDTO;
 import com.bolsu.BolsuAPI.model.Usuario;
 import com.bolsu.BolsuAPI.repository.DadosAcademicosRepository;
 import com.bolsu.BolsuAPI.repository.DadosFinanceirosRepository;
 import com.bolsu.BolsuAPI.repository.UsuarioRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.test.util.ReflectionTestUtils;
 
 import java.util.Optional;
 
@@ -31,6 +33,7 @@ class UsuarioServiceTest {
                 dadosAcademicosRepository,
                 dadosFinanceirosRepository
         );
+        ReflectionTestUtils.setField(usuarioService, "passwordEncoder", new BCryptPasswordEncoder());
 
         when(usuarioRepository.save(any(Usuario.class)))
                 .thenAnswer(invocation -> invocation.getArgument(0));
@@ -76,14 +79,14 @@ class UsuarioServiceTest {
 
         Usuario usuarioAtualizado = usuarioService.update(
                 "usuario-1",
-                new UsuarioDTO("Núbia Torres", "novo@email.com", null, null, null, null)
+                new UsuarioRequestDTO("Núbia Torres", "novo@email.com", null, null, null, null)
         );
 
         assertThat(usuarioAtualizado.getSlug()).isEqualTo("nubia-torres-1");
     }
 
     private Usuario adicionarUsuario(String nomeCompleto) {
-        UsuarioDTO usuarioDTO = new UsuarioDTO(
+        UsuarioRequestDTO usuarioRequestDTO = new UsuarioRequestDTO(
                 nomeCompleto,
                 nomeCompleto.replace(" ", ".").toLowerCase() + "@email.com",
                 "senha",
@@ -92,6 +95,6 @@ class UsuarioServiceTest {
                 null
         );
 
-        return usuarioService.add(usuarioDTO);
+        return usuarioService.add(usuarioRequestDTO);
     }
 }

@@ -1,13 +1,15 @@
 package com.bolsu.BolsuAPI.service;
 
-import com.bolsu.BolsuAPI.dto.UsuarioDTO;
+import com.bolsu.BolsuAPI.dto.UsuarioRequestDTO;
 import com.bolsu.BolsuAPI.model.DadosAcademicos;
 import com.bolsu.BolsuAPI.model.DadosFinanceiros;
 import com.bolsu.BolsuAPI.model.Usuario;
 import com.bolsu.BolsuAPI.repository.DadosAcademicosRepository;
 import com.bolsu.BolsuAPI.repository.DadosFinanceirosRepository;
 import com.bolsu.BolsuAPI.repository.UsuarioRepository;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
@@ -19,6 +21,9 @@ import java.util.Set;
 
 @Service
 public class UsuarioService {
+
+    @Autowired
+    private PasswordEncoder passwordEncoder;
 
     private static final Set<String> PARTICULAS_NOME = Set.of(
             "da", "das", "de", "do", "dos", "e"
@@ -42,53 +47,60 @@ public class UsuarioService {
         return usuarioRepository.findAll();
     }
 
+
     public Usuario getById(String id) {
         return usuarioRepository.findById(id)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Usuário não encontrado"));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Usuario nao encontrado"));
     }
 
-    public Usuario add(UsuarioDTO usuarioDTO) {
-        validarCamposObrigatorios(usuarioDTO, true);
-        validarEmailUnico(usuarioDTO.email(), null);
+    public Usuario getByEmail(String email) {
+        return usuarioRepository.findByEmailIgnoreCase(email)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Usuario nao encontrado"));
+    }
 
-        String nomeCompleto = usuarioDTO.nomeCompleto().trim();
+    public Usuario add(UsuarioRequestDTO usuarioRequestDTO) {
+        validarCamposObrigatorios(usuarioRequestDTO, true);
+        validarEmailUnico(usuarioRequestDTO.email(), null);
+
+        String nomeCompleto = usuarioRequestDTO.nomeCompleto().trim();
+        String senhaCripto = passwordEncoder.encode(usuarioRequestDTO.senha());
 
         Usuario usuario = new Usuario(
                 nomeCompleto,
                 gerarSlugUnica(nomeCompleto, null),
-                usuarioDTO.email().trim().toLowerCase(),
-                usuarioDTO.senha(),
-                normalizarOpcional(usuarioDTO.celular()),
-                salvarDadosAcademicos(usuarioDTO.dadosAcademicos(), null),
-                salvarDadosFinanceiros(usuarioDTO.dadosFinanceiros(), null)
+                usuarioRequestDTO.email().trim().toLowerCase(),
+                senhaCripto,
+                normalizarOpcional(usuarioRequestDTO.celular()),
+                salvarDadosAcademicos(usuarioRequestDTO.dadosAcademicos(), null),
+                salvarDadosFinanceiros(usuarioRequestDTO.dadosFinanceiros(), null)
         );
 
         return usuarioRepository.save(usuario);
     }
 
-    public Usuario update(String id, UsuarioDTO usuarioDTO) {
+    public Usuario update(String id, UsuarioRequestDTO usuarioRequestDTO) {
         Usuario usuario = getById(id);
-        validarCamposObrigatorios(usuarioDTO, false);
-        validarEmailUnico(usuarioDTO.email(), usuario);
+        validarCamposObrigatorios(usuarioRequestDTO, false);
+        validarEmailUnico(usuarioRequestDTO.email(), usuario);
 
         DadosAcademicos dadosAcademicosAnteriores = usuario.getDadosAcademicos();
         DadosFinanceiros dadosFinanceirosAnteriores = usuario.getDadosFinanceiros();
-        String nomeCompleto = usuarioDTO.nomeCompleto().trim();
+        String nomeCompleto = usuarioRequestDTO.nomeCompleto().trim();
 
         if (!nomeCompleto.equals(usuario.getNome_completo())) {
             usuario.setSlug(gerarSlugUnica(nomeCompleto, usuario.getSlug()));
         }
 
         usuario.setNome_completo(nomeCompleto);
-        usuario.setEmail(usuarioDTO.email().trim().toLowerCase());
-        usuario.setCelular(normalizarOpcional(usuarioDTO.celular()));
+        usuario.setEmail(usuarioRequestDTO.email().trim().toLowerCase());
+        usuario.setCelular(normalizarOpcional(usuarioRequestDTO.celular()));
 
-        if (temTexto(usuarioDTO.senha())) {
-            usuario.setSenha(usuarioDTO.senha());
+        if (temTexto(usuarioRequestDTO.senha())) {
+            usuario.setSenha(passwordEncoder.encode(usuarioRequestDTO.senha()));
         }
 
-        usuario.setDadosAcademicos(salvarDadosAcademicos(usuarioDTO.dadosAcademicos(), dadosAcademicosAnteriores));
-        usuario.setDadosFinanceiros(salvarDadosFinanceiros(usuarioDTO.dadosFinanceiros(), dadosFinanceirosAnteriores));
+        usuario.setDadosAcademicos(salvarDadosAcademicos(usuarioRequestDTO.dadosAcademicos(), dadosAcademicosAnteriores));
+        usuario.setDadosFinanceiros(salvarDadosFinanceiros(usuarioRequestDTO.dadosFinanceiros(), dadosFinanceirosAnteriores));
 
         removerDadosAcademicosDesvinculados(dadosAcademicosAnteriores, usuario.getDadosAcademicos());
         removerDadosFinanceirosDesvinculados(dadosFinanceirosAnteriores, usuario.getDadosFinanceiros());
@@ -106,6 +118,10 @@ public class UsuarioService {
         if (usuario.getDadosFinanceiros() != null && usuario.getDadosFinanceiros().getId() != null) {
             dadosFinanceirosRepository.deleteById(usuario.getDadosFinanceiros().getId());
         }
+    }
+
+    public boolean validarSenha(String senhaDigitada, String senhaCripto){
+        return passwordEncoder.matches(senhaDigitada, senhaCripto);
     }
 
     private DadosAcademicos salvarDadosAcademicos(DadosAcademicos dados, DadosAcademicos dadosAtuais) {
@@ -136,17 +152,17 @@ public class UsuarioService {
         }
     }
 
-    private void validarCamposObrigatorios(UsuarioDTO usuarioDTO, boolean senhaObrigatoria) {
-        if (usuarioDTO == null) {
+    private void validarCamposObrigatorios(UsuarioRequestDTO usuarioRequestDTO, boolean senhaObrigatoria) {
+        if (usuarioRequestDTO == null) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Os dados do usuário são obrigatórios");
         }
-        if (!temTexto(usuarioDTO.nomeCompleto())) {
+        if (!temTexto(usuarioRequestDTO.nomeCompleto())) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "O nome completo é obrigatório");
         }
-        if (!temTexto(usuarioDTO.email())) {
+        if (!temTexto(usuarioRequestDTO.email())) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "O e-mail é obrigatório");
         }
-        if (senhaObrigatoria && !temTexto(usuarioDTO.senha())) {
+        if (senhaObrigatoria && !temTexto(usuarioRequestDTO.senha())) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "A senha é obrigatória");
         }
     }

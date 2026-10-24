@@ -13,7 +13,6 @@ public class Usuario {
     private String nome_completo;
     private String slug;
     private String email;
-    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
     private String senha;
     private String celular;
     @DBRef
