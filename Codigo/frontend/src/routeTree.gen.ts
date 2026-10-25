@@ -10,11 +10,23 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as EfeitoFormaturaRouteImport } from './routes/efeito-formatura'
+import { Route as MissoesRouteImport } from './routes/missoes'
 import { Route as TesteRouteImport } from './routes/teste'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const EfeitoFormaturaRoute = EfeitoFormaturaRouteImport.update({
+  id: '/efeito-formatura',
+  path: '/efeito-formatura',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MissoesRoute = MissoesRouteImport.update({
+  id: '/missoes',
+  path: '/missoes',
   getParentRoute: () => rootRouteImport,
 } as any)
 const TesteRoute = TesteRouteImport.update({
@@ -25,27 +37,35 @@ const TesteRoute = TesteRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/efeito-formatura': typeof EfeitoFormaturaRoute
+  '/missoes': typeof MissoesRoute
   '/teste': typeof TesteRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/efeito-formatura': typeof EfeitoFormaturaRoute
+  '/missoes': typeof MissoesRoute
   '/teste': typeof TesteRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/efeito-formatura': typeof EfeitoFormaturaRoute
+  '/missoes': typeof MissoesRoute
   '/teste': typeof TesteRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/teste'
+  fullPaths: '/' | '/efeito-formatura' | '/missoes' | '/teste'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/teste'
-  id: '__root__' | '/' | '/teste'
+  to: '/' | '/efeito-formatura' | '/missoes' | '/teste'
+  id: '__root__' | '/' | '/efeito-formatura' | '/missoes' | '/teste'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  EfeitoFormaturaRoute: typeof EfeitoFormaturaRoute
+  MissoesRoute: typeof MissoesRoute
   TesteRoute: typeof TesteRoute
 }
 
@@ -56,6 +76,20 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/efeito-formatura': {
+      id: '/efeito-formatura'
+      path: '/efeito-formatura'
+      fullPath: '/efeito-formatura'
+      preLoaderRoute: typeof EfeitoFormaturaRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/missoes': {
+      id: '/missoes'
+      path: '/missoes'
+      fullPath: '/missoes'
+      preLoaderRoute: typeof MissoesRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/teste': {
@@ -70,6 +104,8 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  EfeitoFormaturaRoute: EfeitoFormaturaRoute,
+  MissoesRoute: MissoesRoute,
   TesteRoute: TesteRoute,
 }
 export const routeTree = rootRouteImport

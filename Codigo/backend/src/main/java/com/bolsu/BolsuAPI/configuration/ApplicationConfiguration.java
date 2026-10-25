@@ -26,7 +26,7 @@ public class ApplicationConfiguration {
             @Override
             public void addCorsMappings(CorsRegistry registry){
                 registry.addMapping("/**") // Aplica a todas as rotas
-                        .allowedOrigins("http://localhost:3000") // Domínio do seu Frontend
+                        .allowedOrigins("http://localhost:3000", "http://127.0.0.1:3000") // Frontend local
                         .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
                         .allowedHeaders("*")
                         .allowCredentials(true);
