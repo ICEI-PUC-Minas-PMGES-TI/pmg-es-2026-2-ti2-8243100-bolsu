@@ -1,6 +1,7 @@
 package com.bolsu.BolsuAPI.service;
 
 import com.bolsu.BolsuAPI.dto.UsuarioRequestDTO;
+import com.bolsu.BolsuAPI.exception.NotFoundException;
 import com.bolsu.BolsuAPI.model.DadosAcademicos;
 import com.bolsu.BolsuAPI.model.DadosFinanceiros;
 import com.bolsu.BolsuAPI.model.Usuario;
@@ -48,14 +49,14 @@ public class UsuarioService {
     }
 
 
-    public Usuario getById(String id) {
+    public Usuario getById(String id) throws NotFoundException {
         return usuarioRepository.findById(id)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Usuario nao encontrado"));
+                .orElseThrow(() -> new NotFoundException("Usuario nao encontrado"));
     }
 
-    public Usuario getByEmail(String email) {
+    public Usuario getByEmail(String email) throws NotFoundException {
         return usuarioRepository.findByEmailIgnoreCase(email)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Usuario nao encontrado"));
+                .orElseThrow(() -> new NotFoundException("Usuario nao encontrado"));
     }
 
     public Usuario add(UsuarioRequestDTO usuarioRequestDTO) {
@@ -78,7 +79,7 @@ public class UsuarioService {
         return usuarioRepository.save(usuario);
     }
 
-    public Usuario update(String id, UsuarioRequestDTO usuarioRequestDTO) {
+    public Usuario update(String id, UsuarioRequestDTO usuarioRequestDTO) throws NotFoundException {
         Usuario usuario = getById(id);
         validarCamposObrigatorios(usuarioRequestDTO, false);
         validarEmailUnico(usuarioRequestDTO.email(), usuario);
@@ -108,7 +109,7 @@ public class UsuarioService {
         return usuarioRepository.save(usuario);
     }
 
-    public void delete(String id) {
+    public void delete(String id) throws NotFoundException {
         Usuario usuario = getById(id);
         usuarioRepository.delete(usuario);
 

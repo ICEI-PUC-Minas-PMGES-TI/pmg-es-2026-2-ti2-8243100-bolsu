@@ -2,9 +2,11 @@ package com.bolsu.BolsuAPI.controller;
 
 import com.bolsu.BolsuAPI.dto.UsuarioRequestDTO;
 import com.bolsu.BolsuAPI.dto.UsuarioResponseDTO;
+import com.bolsu.BolsuAPI.exception.NotFoundException;
 import com.bolsu.BolsuAPI.model.Usuario;
 import com.bolsu.BolsuAPI.service.UsuarioService;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -14,12 +16,12 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import java.net.URI;
 import java.security.Principal;
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/users")
@@ -43,21 +45,27 @@ public class UsuarioController {
         try {
             Usuario usuario = usuarioService.getById(id);
             return ResponseEntity.ok(usuario);
-        } catch (ResponseStatusException e) {
-            return ResponseEntity.notFound().build();
+        } catch (NotFoundException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
         }
     }
 
     @GetMapping("/current")
     public ResponseEntity<UsuarioResponseDTO> getCurrent(Principal principal) {
-        Usuario usuario = usuarioService.getById(principal.getName());
-        return ResponseEntity.ok(new UsuarioResponseDTO(
-                usuario.getNome_completo(),
-                usuario.getEmail(),
-                usuario.getCelular(),
-                usuario.getDadosAcademicos(),
-                usuario.getDadosFinanceiros()
-        ));
+        Usuario usuario = null;
+        try {
+            usuario = usuarioService.getById(principal.getName());
+
+            return ResponseEntity.ok(new UsuarioResponseDTO(
+                    usuario.getNome_completo(),
+                    usuario.getEmail(),
+                    usuario.getCelular(),
+                    usuario.getDadosAcademicos(),
+                    usuario.getDadosFinanceiros()
+            ));
+        } catch (NotFoundException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+        }
     }
 
     @PostMapping
@@ -73,12 +81,20 @@ public class UsuarioController {
 
     @PutMapping("/{id}")
     public ResponseEntity<Usuario> update(@PathVariable String id, @RequestBody UsuarioRequestDTO usuarioRequestDTO) {
-        return ResponseEntity.ok(usuarioService.update(id, usuarioRequestDTO));
+        try {
+            return ResponseEntity.ok(usuarioService.update(id, usuarioRequestDTO));
+        } catch (NotFoundException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+        }
     }
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> delete(@PathVariable String id) {
-        usuarioService.delete(id);
-        return ResponseEntity.noContent().build();
+        try {
+            usuarioService.delete(id);
+            return ResponseEntity.noContent().build();
+        } catch (NotFoundException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+        }
     }
 }

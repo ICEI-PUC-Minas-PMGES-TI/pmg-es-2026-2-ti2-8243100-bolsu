@@ -2,6 +2,7 @@ package com.bolsu.BolsuAPI.controller;
 
 import com.bolsu.BolsuAPI.dto.LoginRequestDTO;
 import com.bolsu.BolsuAPI.exception.IncorrectAuthorizationDataException;
+import com.bolsu.BolsuAPI.exception.NotFoundException;
 import com.bolsu.BolsuAPI.model.Usuario;
 import com.bolsu.BolsuAPI.service.AuthService;
 import com.bolsu.BolsuAPI.service.UsuarioService;
@@ -43,6 +44,8 @@ public class AuthController {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("message", e.getMessage()));
         } catch (IncorrectAuthorizationDataException e) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("message", e.getMessage()));
+        } catch (NotFoundException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("message", e.getMessage()));
         }
     }
 }
