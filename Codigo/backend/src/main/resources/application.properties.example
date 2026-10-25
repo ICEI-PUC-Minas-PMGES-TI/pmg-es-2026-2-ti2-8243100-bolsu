@@ -1,1 +1,4 @@
 spring.application.name=BolsuAPI
+springdoc.swagger-ui.path=/docs
+spring.mongodb.uri=mongodb+srv://<usuario>:<senha>@<cluster>.mongodb.net/
+spring.mongodb.database=bolsu-db
