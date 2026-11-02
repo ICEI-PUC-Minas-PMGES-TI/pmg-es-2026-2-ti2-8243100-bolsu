@@ -1,6 +1,6 @@
 cff-version: 1.0.1
 message: Please cite this software using these metadata.
-title: 
+title: "Bolsu"
 authors:
   - family-names: Pinto Mariano Portella
     given-names: Diego Vitor
@@ -33,7 +33,7 @@ keywords:
   - organizacao
   - planilha
   - planejamento
-repository-code: https://github.com/ICEI-PUC-Minas-PMGES-TI/pmg-es-2026-2-ti2-8243100-bolsu
+repository-code: "https://github.com/ICEI-PUC-Minas-PMGES-TI/pmg-es-2026-2-ti2-8243100-bolsu"
 license: CC-BY-4.0
 version: 1.0.0
 date-released: 2022-07-14
