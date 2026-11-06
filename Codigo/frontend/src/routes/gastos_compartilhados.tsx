@@ -1,7 +1,7 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { useState } from 'react'
 import type { FormEvent } from 'react'
-import { Briefcase, CreditCard, Home, Plus, Trophy, User, X } from 'lucide-react'
+import { Plus, X } from 'lucide-react'
 
 export const Route = createFileRoute('/gastos_compartilhados')({
   component: GastosCompartilhados,
@@ -30,14 +30,6 @@ const iconeDoTipo = (t: Tipo) => tipos.find((x) => x.valor === t)!.icone
 
 const brl = (v: number) =>
   Math.abs(v).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
-
-const navItens = [
-  { label: 'Início', Icon: Home, ativo: false },
-  { label: 'Gastos', Icon: CreditCard, ativo: true },
-  { label: 'Missões', Icon: Trophy, ativo: false },
-  { label: 'Renda', Icon: Briefcase, ativo: false },
-  { label: 'Perfil', Icon: User, ativo: false },
-]
 
 const campo =
   'w-full rounded-xl border border-neutral-200 bg-white px-3 py-2.5 text-sm text-neutral-900 placeholder:text-neutral-400 focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/30'
@@ -123,26 +115,8 @@ function GastosCompartilhados() {
   }
 
   return (
-    <div className="min-h-screen bg-[#F6F8F7] lg:flex">
-      {/* Menu lateral (só no computador) */}
-      <aside className="hidden w-60 shrink-0 flex-col gap-1 border-r border-neutral-200 bg-white p-4 lg:flex">
-        <p className="mb-4 px-3 text-lg font-bold text-neutral-900">Bolsu</p>
-        {navItens.map(({ label, Icon, ativo }) => (
-          <button
-            key={label}
-            type="button"
-            className={`flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm ${foco} ${
-              ativo
-                ? 'bg-emerald-50 font-semibold text-emerald-600'
-                : 'text-neutral-500 hover:bg-neutral-50'
-            }`}
-          >
-            <Icon size={18} />
-            {label}
-          </button>
-        ))}
-      </aside>
-
+    <div className="min-h-screen bg-[#F6F8F7]">
+      <p role="note" className="bg-amber-50 px-5 py-3 text-sm text-amber-900">Demonstração: grupos e divisões ficam apenas nesta tela; não há compartilhamento entre contas.</p>
       <main className="mx-auto w-full max-w-md flex-1 px-5 pb-32 pt-8 lg:max-w-5xl lg:px-10 lg:pb-10 lg:pt-10">
         <header className="flex items-start justify-between gap-4">
           <div>
@@ -238,7 +212,7 @@ function GastosCompartilhados() {
           <div
             className={
               formAberto
-                ? 'fixed inset-0 z-30 flex items-end bg-black/40 lg:static lg:block lg:bg-transparent'
+                ? 'fixed inset-0 z-[60] flex items-end bg-black/40 lg:static lg:block lg:bg-transparent'
                 : 'hidden lg:block'
             }
             onClick={(e) => {
@@ -393,20 +367,7 @@ function GastosCompartilhados() {
       </button>
 
       {/* Navegação inferior (só no celular) */}
-      <nav className="fixed inset-x-0 bottom-0 z-10 flex justify-around border-t border-neutral-100 bg-white px-2 py-3 lg:hidden">
-        {navItens.map(({ label, Icon, ativo }) => (
-          <button
-            key={label}
-            type="button"
-            className={`flex flex-col items-center gap-1 rounded-xl px-3 py-1 text-[10px] ${foco} ${
-              ativo ? 'bg-emerald-50 font-semibold text-emerald-600' : 'text-neutral-400'
-            }`}
-          >
-            <Icon size={18} />
-            {label}
-          </button>
-        ))}
-      </nav>
+
     </div>
   )
 }

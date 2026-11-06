@@ -10,6 +10,7 @@ public class Gasto {
 
     @Id
     private String id;
+    private String usuarioId;
     private String categoria;
     private double valor;
     private LocalDate data;
@@ -21,6 +22,9 @@ public class Gasto {
         this.data = data;
         this.descricao = descricao;
     }
+
+    public String getUsuarioId() { return usuarioId; }
+    public void setUsuarioId(String usuarioId) { this.usuarioId = usuarioId; }
 
     public String getId() { return id; }
     public void setId(String id) { this.id = id; }

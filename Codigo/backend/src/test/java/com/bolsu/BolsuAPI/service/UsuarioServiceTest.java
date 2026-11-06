@@ -64,7 +64,7 @@ class UsuarioServiceTest {
     }
 
     @Test
-    void devePreservarSlugAoAtualizarUsuarioSemAlterarONome() {
+    void devePreservarSlugAoAtualizarUsuarioSemAlterarONome() throws Exception {
         Usuario usuarioExistente = new Usuario(
                 "Núbia Torres",
                 "nubia-torres-1",

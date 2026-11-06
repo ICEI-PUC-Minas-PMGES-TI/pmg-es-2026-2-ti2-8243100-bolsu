@@ -64,3 +64,5 @@
   -ms-overflow-style: none;
   scrollbar-width: none;
 }
+@keyframes dashboard-enter { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+@media (prefers-reduced-motion: no-preference) { .dashboard-entry > div { animation: dashboard-enter 300ms ease-out both; } .dashboard-entry > div:nth-of-type(2) { animation-delay: 100ms; } .dashboard-entry > div:nth-of-type(3) { animation-delay: 200ms; } }

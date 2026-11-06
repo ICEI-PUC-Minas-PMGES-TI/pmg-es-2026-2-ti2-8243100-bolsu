@@ -1,3 +1,4 @@
+import { apiFetch } from './api'
 import { useQuery } from '@tanstack/react-query'
 
 export type Missao = {
@@ -11,11 +12,11 @@ export type Missao = {
   recompensaMoedas: number
 }
 
-const base = (import.meta.env.VITE_API_URL || 'http://localhost:8080').replace(/\/$/, '')
+
 
 async function buscarMissoes(): Promise<Missao[]> {
   let response: Response
-  try { response = await fetch(`${base}/api/missoes`) }
+  try { response = await apiFetch(`/api/missoes`) }
   catch { throw new Error('Não foi possível conectar. Confira sua conexão e tente novamente.') }
   if (!response.ok) throw new Error('Não foi possível carregar as missões. Tente novamente em instantes.')
   const dados = await response.json()

@@ -35,12 +35,13 @@ public class UsuarioController {
     }
 
     @GetMapping
-    public ResponseEntity<List<Usuario>> getAll() {
-        return ResponseEntity.ok(usuarioService.getAll());
+    public ResponseEntity<List<Usuario>> getAll(Principal principal) throws NotFoundException {
+        return ResponseEntity.ok(List.of(usuarioService.getById(principal.getName())));
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Usuario> getById(@PathVariable String id) {
+    public ResponseEntity<Usuario> getById(@PathVariable String id, Principal principal) {
+        if (!id.equals(principal.getName())) return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
 
         try {
             Usuario usuario = usuarioService.getById(id);
@@ -80,7 +81,8 @@ public class UsuarioController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<Usuario> update(@PathVariable String id, @RequestBody UsuarioRequestDTO usuarioRequestDTO) {
+    public ResponseEntity<Usuario> update(@PathVariable String id, @RequestBody UsuarioRequestDTO usuarioRequestDTO, Principal principal) {
+        if (!id.equals(principal.getName())) return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
         try {
             return ResponseEntity.ok(usuarioService.update(id, usuarioRequestDTO));
         } catch (NotFoundException e) {
@@ -89,7 +91,8 @@ public class UsuarioController {
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> delete(@PathVariable String id) {
+    public ResponseEntity<Void> delete(@PathVariable String id, Principal principal) {
+        if (!id.equals(principal.getName())) return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
         try {
             usuarioService.delete(id);
             return ResponseEntity.noContent().build();

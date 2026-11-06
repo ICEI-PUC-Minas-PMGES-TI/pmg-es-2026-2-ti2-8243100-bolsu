@@ -31,6 +31,9 @@ public class AuthController {
     @PostMapping("/login")
     public ResponseEntity<Map<String, String>> login(@RequestBody LoginRequestDTO loginRequestDTO) {
 
+        if (loginRequestDTO == null || loginRequestDTO.email() == null || loginRequestDTO.senha() == null) {
+            return ResponseEntity.badRequest().body(Map.of("message", "Informe email e senha"));
+        }
         try {
             Usuario usuario = usuarioService.getByEmail(loginRequestDTO.email());
 
@@ -40,12 +43,8 @@ public class AuthController {
 
             return ResponseEntity.status(HttpStatus.ACCEPTED).body(Map.of("token", authService.generateToken(usuario.getId())));
 
-        } catch (ResponseStatusException e) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("message", e.getMessage()));
-        } catch (IncorrectAuthorizationDataException e) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("message", e.getMessage()));
-        } catch (NotFoundException e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("message", e.getMessage()));
+        } catch (ResponseStatusException | IncorrectAuthorizationDataException | NotFoundException e) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("message", "Email ou senha invalidos"));
         }
     }
 }

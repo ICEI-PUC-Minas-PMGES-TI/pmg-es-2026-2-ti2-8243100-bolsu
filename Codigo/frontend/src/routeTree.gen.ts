@@ -10,18 +10,26 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as CadastroRouteImport } from './routes/cadastro'
 import { Route as CadastroGastoRouteImport } from './routes/cadastro-gasto'
 import { Route as EfeitoFormaturaRouteImport } from './routes/efeito-formatura'
 import { Route as GastosRouteImport } from './routes/gastos'
 import { Route as Gastos_compartilhadosRouteImport } from './routes/gastos_compartilhados'
 import { Route as InicioRouteImport } from './routes/inicio'
+import { Route as LoginRouteImport } from './routes/login'
 import { Route as MissoesRouteImport } from './routes/missoes'
 import { Route as OrcamentoRouteImport } from './routes/orcamento'
+import { Route as PerfilRouteImport } from './routes/perfil'
 import { Route as TesteRouteImport } from './routes/teste'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CadastroRoute = CadastroRouteImport.update({
+  id: '/cadastro',
+  path: '/cadastro',
   getParentRoute: () => rootRouteImport,
 } as any)
 const CadastroGastoRoute = CadastroGastoRouteImport.update({
@@ -49,6 +57,11 @@ const InicioRoute = InicioRouteImport.update({
   path: '/inicio',
   getParentRoute: () => rootRouteImport,
 } as any)
+const LoginRoute = LoginRouteImport.update({
+  id: '/login',
+  path: '/login',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const MissoesRoute = MissoesRouteImport.update({
   id: '/missoes',
   path: '/missoes',
@@ -59,6 +72,11 @@ const OrcamentoRoute = OrcamentoRouteImport.update({
   path: '/orcamento',
   getParentRoute: () => rootRouteImport,
 } as any)
+const PerfilRoute = PerfilRouteImport.update({
+  id: '/perfil',
+  path: '/perfil',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const TesteRoute = TesteRouteImport.update({
   id: '/teste',
   path: '/teste',
@@ -67,83 +85,104 @@ const TesteRoute = TesteRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/cadastro': typeof CadastroRoute
   '/cadastro-gasto': typeof CadastroGastoRoute
   '/efeito-formatura': typeof EfeitoFormaturaRoute
   '/gastos': typeof GastosRoute
   '/gastos_compartilhados': typeof Gastos_compartilhadosRoute
   '/inicio': typeof InicioRoute
+  '/login': typeof LoginRoute
   '/missoes': typeof MissoesRoute
   '/orcamento': typeof OrcamentoRoute
+  '/perfil': typeof PerfilRoute
   '/teste': typeof TesteRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/cadastro': typeof CadastroRoute
   '/cadastro-gasto': typeof CadastroGastoRoute
   '/efeito-formatura': typeof EfeitoFormaturaRoute
   '/gastos': typeof GastosRoute
   '/gastos_compartilhados': typeof Gastos_compartilhadosRoute
   '/inicio': typeof InicioRoute
+  '/login': typeof LoginRoute
   '/missoes': typeof MissoesRoute
   '/orcamento': typeof OrcamentoRoute
+  '/perfil': typeof PerfilRoute
   '/teste': typeof TesteRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/cadastro': typeof CadastroRoute
   '/cadastro-gasto': typeof CadastroGastoRoute
   '/efeito-formatura': typeof EfeitoFormaturaRoute
   '/gastos': typeof GastosRoute
   '/gastos_compartilhados': typeof Gastos_compartilhadosRoute
   '/inicio': typeof InicioRoute
+  '/login': typeof LoginRoute
   '/missoes': typeof MissoesRoute
   '/orcamento': typeof OrcamentoRoute
+  '/perfil': typeof PerfilRoute
   '/teste': typeof TesteRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/cadastro'
     | '/cadastro-gasto'
     | '/efeito-formatura'
     | '/gastos'
     | '/gastos_compartilhados'
     | '/inicio'
+    | '/login'
     | '/missoes'
     | '/orcamento'
+    | '/perfil'
     | '/teste'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/cadastro'
     | '/cadastro-gasto'
     | '/efeito-formatura'
     | '/gastos'
     | '/gastos_compartilhados'
     | '/inicio'
+    | '/login'
     | '/missoes'
     | '/orcamento'
+    | '/perfil'
     | '/teste'
   id:
     | '__root__'
     | '/'
+    | '/cadastro'
     | '/cadastro-gasto'
     | '/efeito-formatura'
     | '/gastos'
     | '/gastos_compartilhados'
     | '/inicio'
+    | '/login'
     | '/missoes'
     | '/orcamento'
+    | '/perfil'
     | '/teste'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  CadastroRoute: typeof CadastroRoute
   CadastroGastoRoute: typeof CadastroGastoRoute
   EfeitoFormaturaRoute: typeof EfeitoFormaturaRoute
   GastosRoute: typeof GastosRoute
   Gastos_compartilhadosRoute: typeof Gastos_compartilhadosRoute
   InicioRoute: typeof InicioRoute
+  LoginRoute: typeof LoginRoute
   MissoesRoute: typeof MissoesRoute
   OrcamentoRoute: typeof OrcamentoRoute
+  PerfilRoute: typeof PerfilRoute
   TesteRoute: typeof TesteRoute
 }
 
@@ -154,6 +193,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/cadastro': {
+      id: '/cadastro'
+      path: '/cadastro'
+      fullPath: '/cadastro'
+      preLoaderRoute: typeof CadastroRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/cadastro-gasto': {
@@ -191,6 +237,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof InicioRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/login': {
+      id: '/login'
+      path: '/login'
+      fullPath: '/login'
+      preLoaderRoute: typeof LoginRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/missoes': {
       id: '/missoes'
       path: '/missoes'
@@ -205,6 +258,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof OrcamentoRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/perfil': {
+      id: '/perfil'
+      path: '/perfil'
+      fullPath: '/perfil'
+      preLoaderRoute: typeof PerfilRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/teste': {
       id: '/teste'
       path: '/teste'
@@ -217,15 +277,27 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  CadastroRoute: CadastroRoute,
   CadastroGastoRoute: CadastroGastoRoute,
   EfeitoFormaturaRoute: EfeitoFormaturaRoute,
   GastosRoute: GastosRoute,
   Gastos_compartilhadosRoute: Gastos_compartilhadosRoute,
   InicioRoute: InicioRoute,
+  LoginRoute: LoginRoute,
   MissoesRoute: MissoesRoute,
   OrcamentoRoute: OrcamentoRoute,
+  PerfilRoute: PerfilRoute,
   TesteRoute: TesteRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { createStart } from '@tanstack/react-start'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+  }
+}

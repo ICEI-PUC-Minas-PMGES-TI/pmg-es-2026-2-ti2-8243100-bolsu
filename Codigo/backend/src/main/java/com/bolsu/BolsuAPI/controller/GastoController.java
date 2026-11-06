@@ -9,6 +9,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
+import java.security.Principal;
 import java.util.List;
 
 @RestController
@@ -19,25 +20,25 @@ public class GastoController {
     private GastoService gastoService;
 
     @GetMapping
-    public List<Gasto> getAll() {
-        return gastoService.getAll();
+    public List<Gasto> getAll(Principal principal) {
+        return gastoService.getAll(principal.getName());
     }
 
     @GetMapping("/resumo")
-    public ResumoGastosDTO resumo(@RequestParam(defaultValue = "mes") String periodo) {
-        return gastoService.resumo(periodo);
+    public ResumoGastosDTO resumo(@RequestParam(defaultValue = "mes") String periodo, Principal principal) {
+        return gastoService.resumo(periodo, principal.getName());
     }
 
     @PostMapping
-    public ResponseEntity<Gasto> add(@RequestBody GastoDTO dto) {
+    public ResponseEntity<Gasto> add(@RequestBody GastoDTO dto, Principal principal) {
         LocalDate data = dto.data() != null ? dto.data() : LocalDate.now();
-        Gasto gasto = gastoService.add(new Gasto(dto.categoria(), dto.valor(), data, dto.descricao()));
+        Gasto gasto = gastoService.add(new Gasto(dto.categoria(), dto.valor(), data, dto.descricao()), principal.getName());
         return ResponseEntity.ok(gasto);
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> delete(@PathVariable String id) {
-        gastoService.delete(id);
+    public ResponseEntity<Void> delete(@PathVariable String id, Principal principal) {
+        gastoService.delete(id, principal.getName());
         return ResponseEntity.noContent().build();
     }
 }

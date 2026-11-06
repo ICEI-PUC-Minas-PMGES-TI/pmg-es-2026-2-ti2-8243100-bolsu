@@ -2,6 +2,15 @@ package com.bolsu.BolsuAPI.security;
 
 import com.bolsu.BolsuAPI.configuration.ApplicationConfiguration;
 import com.bolsu.BolsuAPI.controller.UsuarioController;
+import com.bolsu.BolsuAPI.controller.GastoController;
+import com.bolsu.BolsuAPI.repository.GastoRepository;
+import com.bolsu.BolsuAPI.service.GastoService;
+import com.bolsu.BolsuAPI.model.Gasto;
+import java.util.List;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.never;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import com.bolsu.BolsuAPI.model.Usuario;
 import com.bolsu.BolsuAPI.repository.UsuarioRepository;
 import com.bolsu.BolsuAPI.service.AuthService;
@@ -45,7 +54,7 @@ class BearerAuthenticationTest {
     private MockMvc mvc;
 
     @BeforeEach
-    void setUp() {
+    void setUp() throws Exception {
         context = new AnnotationConfigWebApplicationContext();
         context.setServletContext(new MockServletContext());
         context.register(TestConfiguration.class);
@@ -169,10 +178,64 @@ class BearerAuthenticationTest {
                 .andExpect(header().string(HttpHeaders.ACCESS_CONTROL_ALLOW_ORIGIN, "http://localhost:3000"));
     }
 
+    @Test
+    void deveNegarLeituraAlteracaoEExclusaoDeOutraConta() throws Exception {
+        String token = "Bearer " + JwtUtil.generateToken("usuario-1");
+        mvc.perform(get("/users/usuario-2").header(HttpHeaders.AUTHORIZATION, token)).andExpect(status().isForbidden());
+        mvc.perform(put("/users/usuario-2").header(HttpHeaders.AUTHORIZATION, token)
+                .contentType("application/json").content("{}" )).andExpect(status().isForbidden());
+        mvc.perform(delete("/users/usuario-2").header(HttpHeaders.AUTHORIZATION, token)).andExpect(status().isForbidden());
+        verifyNoInteractions(context.getBean(UsuarioService.class));
+    }
+
+    @Test
+    void deveListarSomenteContaAtualSemSenha() throws Exception {
+        mvc.perform(get("/users").header(HttpHeaders.AUTHORIZATION, "Bearer " + JwtUtil.generateToken("usuario-1")))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.length()").value(1))
+                .andExpect(jsonPath("$[0].id").value("usuario-1"))
+                .andExpect(jsonPath("$[0].senha").doesNotExist());
+    }
+
+    @Test
+    void deveVincularGastoAoTokenIgnorandoProprietarioEnviado() throws Exception {
+        var repository = context.getBean(GastoRepository.class);
+        when(repository.save(any(Gasto.class))).thenAnswer(call -> call.getArgument(0));
+        mvc.perform(post("/gastos").header(HttpHeaders.AUTHORIZATION, "Bearer " + JwtUtil.generateToken("usuario-1"))
+                        .contentType("application/json")
+                        .content("{\"categoria\":\"Lanches\",\"valor\":10,\"usuarioId\":\"usuario-2\"}"))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.usuarioId").value("usuario-1"));
+    }
+
+    @Test
+    void deveConsultarEExcluirGastosApenasDentroDaConta() throws Exception {
+        var repository = context.getBean(GastoRepository.class);
+        String token = "Bearer " + JwtUtil.generateToken("usuario-1");
+        when(repository.findByUsuarioId("usuario-1")).thenReturn(List.of());
+        when(repository.findByUsuarioIdAndDataGreaterThanEqualAndDataLessThanEqual(eq("usuario-1"), any(), any())).thenReturn(List.of());
+        mvc.perform(get("/gastos").param("usuarioId", "usuario-2").header(HttpHeaders.AUTHORIZATION, token)).andExpect(status().isOk());
+        mvc.perform(get("/gastos/resumo").header(HttpHeaders.AUTHORIZATION, token)).andExpect(status().isOk()).andExpect(jsonPath("$.total").value(0));
+        mvc.perform(delete("/gastos/gasto-de-outra-conta").header(HttpHeaders.AUTHORIZATION, token)).andExpect(status().isNotFound());
+        verify(repository).findByUsuarioId("usuario-1");
+        verify(repository).findByUsuarioIdAndDataGreaterThanEqualAndDataLessThanEqual(eq("usuario-1"), any(), any());
+        verify(repository).deleteByIdAndUsuarioId("gasto-de-outra-conta", "usuario-1");
+        verify(repository, never()).deleteById(any());
+    }
+
+    @Test
+    void deveRecusarGastoInvalidoESemAutenticacao() throws Exception {
+        mvc.perform(get("/gastos")).andExpect(status().isUnauthorized());
+        mvc.perform(post("/gastos").header(HttpHeaders.AUTHORIZATION, "Bearer " + JwtUtil.generateToken("usuario-1"))
+                .contentType("application/json").content("{\"categoria\":\"Lanches\",\"valor\":-10}"))
+                .andExpect(status().isBadRequest());
+        verifyNoInteractions(context.getBean(GastoRepository.class));
+    }
+
     @Configuration
     @EnableWebMvc
-    @Import({ApplicationConfiguration.class, UsuarioController.class})
+    @Import({ApplicationConfiguration.class, UsuarioController.class, GastoController.class, GastoService.class})
     static class TestConfiguration {
+        @Bean
+        GastoRepository gastoRepository() { return mock(GastoRepository.class); }
         @Bean
         UsuarioService usuarioService() {
             return mock(UsuarioService.class);

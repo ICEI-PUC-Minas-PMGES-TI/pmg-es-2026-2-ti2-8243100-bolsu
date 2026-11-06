@@ -1,3 +1,4 @@
+import { apiFetch } from '../lib/api'
 import { useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { createFileRoute } from '@tanstack/react-router'
@@ -25,7 +26,7 @@ type Categoria = {
 
 const PERIODOS: Periodo[] = ['Semana', 'Mês', 'Semestre']
 
-const API = 'http://localhost:8080' // URL do backend local
+
 
 const ORCAMENTO: Record<Periodo, number> = { Semana: 120, Mês: 500, Semestre: 3000 }
 
@@ -129,7 +130,7 @@ function Gastos() {
   const { data, isLoading, isError } = useQuery<Resumo>({
     queryKey: ['gastos', periodo],
     queryFn: async () => {
-      const res = await fetch(`${API}/gastos/resumo?periodo=${PERIODO_API[periodo]}`)
+      const res = await apiFetch(`/gastos/resumo?periodo=${PERIODO_API[periodo]}`)
       if (!res.ok) throw new Error('Falha ao buscar gastos')
       return res.json()
     },
@@ -144,7 +145,7 @@ function Gastos() {
         setExtrasDemo((e) => [...e, { nome: g.categoria, valor: g.valor }])
         return
       }
-      const res = await fetch(`${API}/gastos`, {
+      const res = await apiFetch(`/gastos`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(g),
@@ -157,9 +158,8 @@ function Gastos() {
     },
   })
 
-  // se o backend falhar ou estiver vazio, cai automaticamente nos dados fictícios
-  const realIndisponivel = fonte === 'reais' && !isLoading && (isError || (data?.categorias.length ?? 0) === 0)
-  const usandoDemo = fonte === 'ficticios' || realIndisponivel
+  // Dados demonstrativos são exibidos somente por escolha explícita.
+  const usandoDemo = fonte === 'ficticios'
 
   const demoResumo = somar(
     Object.values(
@@ -219,15 +219,14 @@ function Gastos() {
           </div>
           {usandoDemo && (
             <span className="rounded-full bg-amber-100 px-3 py-1 text-[12px] font-semibold text-amber-800">
-              {fonte === 'ficticios'
-                ? 'Modo demonstração: valores inventados'
-                : isError
-                  ? 'Backend indisponível: mostrando dados fictícios'
-                  : 'Banco vazio: mostrando dados fictícios'}
+              Modo demonstração: valores inventados
             </span>
           )}
         </div>
 
+        {fonte === 'reais' && isError && <p role="alert" className="px-5 py-3 text-red-600">Não foi possível carregar seus gastos. Tente novamente mais tarde.</p>}
+        {fonte === 'reais' && isLoading && <p role="status" className="px-5 py-3">Carregando seus gastos…</p>}
+        <p className="px-5 pt-3 text-sm text-slate-500">O limite de orçamento desta tela ainda é demonstrativo.</p>
         <main className="mx-auto grid max-w-6xl gap-6 px-5 pt-5 lg:grid-cols-[380px_1fr] lg:items-start lg:gap-8 lg:px-10 lg:pt-8">
           {/* Resumo + gráfico */}
           <div className="space-y-6 lg:rounded-3xl lg:border lg:border-slate-100 lg:bg-white lg:p-6 lg:shadow-[0_2px_12px_rgba(15,23,42,0.06)]">
@@ -293,7 +292,7 @@ function Gastos() {
       </button>
 
       {form && (
-        <div className="fixed inset-0 z-30 flex items-center justify-center bg-black/40 p-4">
+        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/40 p-4">
           <form
             className="w-full max-w-sm space-y-3 rounded-2xl bg-white p-5"
             onSubmit={(e) => {
@@ -317,7 +316,7 @@ function Gastos() {
             {novoGasto.isError && <p className="text-sm text-red-500">Erro ao salvar.</p>}
             <div className="flex justify-end gap-2">
               <button type="button" onClick={() => setForm(false)} className="rounded-full px-4 py-2 text-sm">Cancelar</button>
-              <button type="submit" className="rounded-full bg-emerald-500 px-4 py-2 text-sm font-bold text-white">Salvar</button>
+              <button type="submit" disabled={novoGasto.isPending} className="rounded-full bg-emerald-500 px-4 py-2 text-sm font-bold text-white">Salvar</button>
             </div>
           </form>
         </div>

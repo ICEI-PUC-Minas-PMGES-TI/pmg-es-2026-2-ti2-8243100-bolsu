@@ -1,5 +1,5 @@
+import { useAuth } from '../lib/auth'
 import { createFileRoute, Link } from '@tanstack/react-router'
-import { motion } from "framer-motion"
 import { ChevronRight, GraduationCap } from "lucide-react"
 import '@/styles.css'
 
@@ -8,10 +8,11 @@ export const Route = createFileRoute('/inicio')({
 })
 
 function Dashboard() {
+  const { user } = useAuth()
   const userData = {
     usuario: {
-      nome: "Diego",
-      mensagemDesempenho: "Você está indo bem essa semana!",
+      nome: user?.nomeCompleto.split(' ')[0] || 'Você',
+      mensagemDesempenho: "Resumo demonstrativo — valores de exemplo",
     },
     resumoFinanceiro: {
       saldoDisponivel: 187.40,
@@ -40,7 +41,7 @@ function Dashboard() {
   const progressoMissao = (userData.missaoDestaque.progressoAtual / userData.missaoDestaque.progressoAlvo) * 100
 
   return (
-    <div className="flex flex-col gap-6 p-6 pt-10">
+    <div className="dashboard-entry flex flex-col gap-6 p-6 pt-10">
       <header className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold tracking-tight text-foreground">
@@ -55,9 +56,7 @@ function Dashboard() {
         </div>
       </header>
 
-      <motion.div
-        initial={{ opacity: 0, y: 10 }}
-        animate={{ opacity: 1, y: 0 }}
+      <div
         className="relative overflow-hidden rounded-[28px] bg-primary p-6 text-primary-foreground shadow-lg shadow-primary/30"
       >
         <div className="absolute top-0 right-0 p-8 opacity-10">
@@ -97,12 +96,9 @@ function Dashboard() {
             Você gastou {Math.abs(userData.resumoFinanceiro.percentualComparacaoSemanaAnterior)}% menos que na semana passada 📉
           </p>
         </div>
-      </motion.div>
+      </div>
 
-      <motion.div
-        initial={{ opacity: 0, y: 10 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.1 }}
+      <div
       >
         <h3 className="text-lg font-bold mb-3">Como está sua semana?</h3>
         <div className="flex gap-3">
@@ -128,12 +124,9 @@ function Dashboard() {
             </span>
           </div>
         </div>
-      </motion.div>
+      </div>
 
-      <motion.div
-        initial={{ opacity: 0, y: 10 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.2 }}
+      <div
         className="rounded-3xl bg-card border border-border p-5 shadow-sm"
       >
         <div className="flex items-start justify-between mb-3">
@@ -168,12 +161,9 @@ function Dashboard() {
         >
           Ver missão <ChevronRight size={16} />
         </Link>
-      </motion.div>
+      </div>
 
-      <motion.div
-        initial={{ opacity: 0, y: 10 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.3 }}
+      <div
         className="relative overflow-hidden rounded-3xl bg-linear-to-br from-indigo-500 to-purple-600 p-5 text-white shadow-sm"
       >
         <div className="absolute -right-4 -top-4 opacity-20">
@@ -201,7 +191,7 @@ function Dashboard() {
             Simular meu futuro
           </Link>
         </div>
-      </motion.div>
+      </div>
     </div>
   )
 }

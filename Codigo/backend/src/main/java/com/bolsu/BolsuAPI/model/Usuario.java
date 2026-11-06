@@ -57,6 +57,7 @@ public class Usuario {
     public void setEmail(String email) {
         this.email = email;
     }
+    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
     public String getSenha() {
         return senha;
     }
