@@ -10,13 +10,20 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as EfeitoFormaturaRouteImport } from './routes/efeito-formatura'
 import { Route as GastosRouteImport } from './routes/gastos'
 import { Route as InicioRouteImport } from './routes/inicio'
+import { Route as MissoesRouteImport } from './routes/missoes'
 import { Route as TesteRouteImport } from './routes/teste'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const EfeitoFormaturaRoute = EfeitoFormaturaRouteImport.update({
+  id: '/efeito-formatura',
+  path: '/efeito-formatura',
   getParentRoute: () => rootRouteImport,
 } as any)
 const GastosRoute = GastosRouteImport.update({
@@ -29,6 +36,11 @@ const InicioRoute = InicioRouteImport.update({
   path: '/inicio',
   getParentRoute: () => rootRouteImport,
 } as any)
+const MissoesRoute = MissoesRouteImport.update({
+  id: '/missoes',
+  path: '/missoes',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const TesteRoute = TesteRouteImport.update({
   id: '/teste',
   path: '/teste',
@@ -37,35 +49,51 @@ const TesteRoute = TesteRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/efeito-formatura': typeof EfeitoFormaturaRoute
   '/gastos': typeof GastosRoute
   '/inicio': typeof InicioRoute
+  '/missoes': typeof MissoesRoute
   '/teste': typeof TesteRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/efeito-formatura': typeof EfeitoFormaturaRoute
   '/gastos': typeof GastosRoute
   '/inicio': typeof InicioRoute
+  '/missoes': typeof MissoesRoute
   '/teste': typeof TesteRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/efeito-formatura': typeof EfeitoFormaturaRoute
   '/gastos': typeof GastosRoute
   '/inicio': typeof InicioRoute
+  '/missoes': typeof MissoesRoute
   '/teste': typeof TesteRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/gastos' | '/inicio' | '/teste'
+  fullPaths:
+    '/' | '/efeito-formatura' | '/gastos' | '/inicio' | '/missoes' | '/teste'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/gastos' | '/inicio' | '/teste'
-  id: '__root__' | '/' | '/gastos' | '/inicio' | '/teste'
+  to: '/' | '/efeito-formatura' | '/gastos' | '/inicio' | '/missoes' | '/teste'
+  id:
+    | '__root__'
+    | '/'
+    | '/efeito-formatura'
+    | '/gastos'
+    | '/inicio'
+    | '/missoes'
+    | '/teste'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  EfeitoFormaturaRoute: typeof EfeitoFormaturaRoute
   GastosRoute: typeof GastosRoute
   InicioRoute: typeof InicioRoute
+  MissoesRoute: typeof MissoesRoute
   TesteRoute: typeof TesteRoute
 }
 
@@ -76,6 +104,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/efeito-formatura': {
+      id: '/efeito-formatura'
+      path: '/efeito-formatura'
+      fullPath: '/efeito-formatura'
+      preLoaderRoute: typeof EfeitoFormaturaRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/gastos': {
@@ -92,6 +127,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof InicioRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/missoes': {
+      id: '/missoes'
+      path: '/missoes'
+      fullPath: '/missoes'
+      preLoaderRoute: typeof MissoesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/teste': {
       id: '/teste'
       path: '/teste'
@@ -104,8 +146,10 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  EfeitoFormaturaRoute: EfeitoFormaturaRoute,
   GastosRoute: GastosRoute,
   InicioRoute: InicioRoute,
+  MissoesRoute: MissoesRoute,
   TesteRoute: TesteRoute,
 }
 export const routeTree = rootRouteImport
