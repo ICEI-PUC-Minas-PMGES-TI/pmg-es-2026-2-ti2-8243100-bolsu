@@ -13,6 +13,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as CadastroGastoRouteImport } from './routes/cadastro-gasto'
 import { Route as EfeitoFormaturaRouteImport } from './routes/efeito-formatura'
 import { Route as GastosRouteImport } from './routes/gastos'
+import { Route as Gastos_compartilhadosRouteImport } from './routes/gastos_compartilhados'
 import { Route as InicioRouteImport } from './routes/inicio'
 import { Route as MissoesRouteImport } from './routes/missoes'
 import { Route as OrcamentoRouteImport } from './routes/orcamento'
@@ -36,6 +37,11 @@ const EfeitoFormaturaRoute = EfeitoFormaturaRouteImport.update({
 const GastosRoute = GastosRouteImport.update({
   id: '/gastos',
   path: '/gastos',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const Gastos_compartilhadosRoute = Gastos_compartilhadosRouteImport.update({
+  id: '/gastos_compartilhados',
+  path: '/gastos_compartilhados',
   getParentRoute: () => rootRouteImport,
 } as any)
 const InicioRoute = InicioRouteImport.update({
@@ -64,6 +70,7 @@ export interface FileRoutesByFullPath {
   '/cadastro-gasto': typeof CadastroGastoRoute
   '/efeito-formatura': typeof EfeitoFormaturaRoute
   '/gastos': typeof GastosRoute
+  '/gastos_compartilhados': typeof Gastos_compartilhadosRoute
   '/inicio': typeof InicioRoute
   '/missoes': typeof MissoesRoute
   '/orcamento': typeof OrcamentoRoute
@@ -74,6 +81,7 @@ export interface FileRoutesByTo {
   '/cadastro-gasto': typeof CadastroGastoRoute
   '/efeito-formatura': typeof EfeitoFormaturaRoute
   '/gastos': typeof GastosRoute
+  '/gastos_compartilhados': typeof Gastos_compartilhadosRoute
   '/inicio': typeof InicioRoute
   '/missoes': typeof MissoesRoute
   '/orcamento': typeof OrcamentoRoute
@@ -85,6 +93,7 @@ export interface FileRoutesById {
   '/cadastro-gasto': typeof CadastroGastoRoute
   '/efeito-formatura': typeof EfeitoFormaturaRoute
   '/gastos': typeof GastosRoute
+  '/gastos_compartilhados': typeof Gastos_compartilhadosRoute
   '/inicio': typeof InicioRoute
   '/missoes': typeof MissoesRoute
   '/orcamento': typeof OrcamentoRoute
@@ -97,6 +106,7 @@ export interface FileRouteTypes {
     | '/cadastro-gasto'
     | '/efeito-formatura'
     | '/gastos'
+    | '/gastos_compartilhados'
     | '/inicio'
     | '/missoes'
     | '/orcamento'
@@ -107,6 +117,7 @@ export interface FileRouteTypes {
     | '/cadastro-gasto'
     | '/efeito-formatura'
     | '/gastos'
+    | '/gastos_compartilhados'
     | '/inicio'
     | '/missoes'
     | '/orcamento'
@@ -117,6 +128,7 @@ export interface FileRouteTypes {
     | '/cadastro-gasto'
     | '/efeito-formatura'
     | '/gastos'
+    | '/gastos_compartilhados'
     | '/inicio'
     | '/missoes'
     | '/orcamento'
@@ -128,6 +140,7 @@ export interface RootRouteChildren {
   CadastroGastoRoute: typeof CadastroGastoRoute
   EfeitoFormaturaRoute: typeof EfeitoFormaturaRoute
   GastosRoute: typeof GastosRoute
+  Gastos_compartilhadosRoute: typeof Gastos_compartilhadosRoute
   InicioRoute: typeof InicioRoute
   MissoesRoute: typeof MissoesRoute
   OrcamentoRoute: typeof OrcamentoRoute
@@ -162,6 +175,13 @@ declare module '@tanstack/react-router' {
       path: '/gastos'
       fullPath: '/gastos'
       preLoaderRoute: typeof GastosRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/gastos_compartilhados': {
+      id: '/gastos_compartilhados'
+      path: '/gastos_compartilhados'
+      fullPath: '/gastos_compartilhados'
+      preLoaderRoute: typeof Gastos_compartilhadosRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/inicio': {
@@ -200,6 +220,7 @@ const rootRouteChildren: RootRouteChildren = {
   CadastroGastoRoute: CadastroGastoRoute,
   EfeitoFormaturaRoute: EfeitoFormaturaRoute,
   GastosRoute: GastosRoute,
+  Gastos_compartilhadosRoute: Gastos_compartilhadosRoute,
   InicioRoute: InicioRoute,
   MissoesRoute: MissoesRoute,
   OrcamentoRoute: OrcamentoRoute,
