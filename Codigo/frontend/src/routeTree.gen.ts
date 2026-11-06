@@ -10,15 +10,22 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as CadastroGastoRouteImport } from './routes/cadastro-gasto'
 import { Route as EfeitoFormaturaRouteImport } from './routes/efeito-formatura'
 import { Route as GastosRouteImport } from './routes/gastos'
 import { Route as InicioRouteImport } from './routes/inicio'
 import { Route as MissoesRouteImport } from './routes/missoes'
+import { Route as OrcamentoRouteImport } from './routes/orcamento'
 import { Route as TesteRouteImport } from './routes/teste'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CadastroGastoRoute = CadastroGastoRouteImport.update({
+  id: '/cadastro-gasto',
+  path: '/cadastro-gasto',
   getParentRoute: () => rootRouteImport,
 } as any)
 const EfeitoFormaturaRoute = EfeitoFormaturaRouteImport.update({
@@ -41,6 +48,11 @@ const MissoesRoute = MissoesRouteImport.update({
   path: '/missoes',
   getParentRoute: () => rootRouteImport,
 } as any)
+const OrcamentoRoute = OrcamentoRouteImport.update({
+  id: '/orcamento',
+  path: '/orcamento',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const TesteRoute = TesteRouteImport.update({
   id: '/teste',
   path: '/teste',
@@ -49,51 +61,76 @@ const TesteRoute = TesteRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/cadastro-gasto': typeof CadastroGastoRoute
   '/efeito-formatura': typeof EfeitoFormaturaRoute
   '/gastos': typeof GastosRoute
   '/inicio': typeof InicioRoute
   '/missoes': typeof MissoesRoute
+  '/orcamento': typeof OrcamentoRoute
   '/teste': typeof TesteRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/cadastro-gasto': typeof CadastroGastoRoute
   '/efeito-formatura': typeof EfeitoFormaturaRoute
   '/gastos': typeof GastosRoute
   '/inicio': typeof InicioRoute
   '/missoes': typeof MissoesRoute
+  '/orcamento': typeof OrcamentoRoute
   '/teste': typeof TesteRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/cadastro-gasto': typeof CadastroGastoRoute
   '/efeito-formatura': typeof EfeitoFormaturaRoute
   '/gastos': typeof GastosRoute
   '/inicio': typeof InicioRoute
   '/missoes': typeof MissoesRoute
+  '/orcamento': typeof OrcamentoRoute
   '/teste': typeof TesteRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
-    '/' | '/efeito-formatura' | '/gastos' | '/inicio' | '/missoes' | '/teste'
-  fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/efeito-formatura' | '/gastos' | '/inicio' | '/missoes' | '/teste'
-  id:
-    | '__root__'
     | '/'
+    | '/cadastro-gasto'
     | '/efeito-formatura'
     | '/gastos'
     | '/inicio'
     | '/missoes'
+    | '/orcamento'
+    | '/teste'
+  fileRoutesByTo: FileRoutesByTo
+  to:
+    | '/'
+    | '/cadastro-gasto'
+    | '/efeito-formatura'
+    | '/gastos'
+    | '/inicio'
+    | '/missoes'
+    | '/orcamento'
+    | '/teste'
+  id:
+    | '__root__'
+    | '/'
+    | '/cadastro-gasto'
+    | '/efeito-formatura'
+    | '/gastos'
+    | '/inicio'
+    | '/missoes'
+    | '/orcamento'
     | '/teste'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  CadastroGastoRoute: typeof CadastroGastoRoute
   EfeitoFormaturaRoute: typeof EfeitoFormaturaRoute
   GastosRoute: typeof GastosRoute
   InicioRoute: typeof InicioRoute
   MissoesRoute: typeof MissoesRoute
+  OrcamentoRoute: typeof OrcamentoRoute
   TesteRoute: typeof TesteRoute
 }
 
@@ -104,6 +141,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/cadastro-gasto': {
+      id: '/cadastro-gasto'
+      path: '/cadastro-gasto'
+      fullPath: '/cadastro-gasto'
+      preLoaderRoute: typeof CadastroGastoRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/efeito-formatura': {
@@ -134,6 +178,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof MissoesRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/orcamento': {
+      id: '/orcamento'
+      path: '/orcamento'
+      fullPath: '/orcamento'
+      preLoaderRoute: typeof OrcamentoRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/teste': {
       id: '/teste'
       path: '/teste'
@@ -146,10 +197,12 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  CadastroGastoRoute: CadastroGastoRoute,
   EfeitoFormaturaRoute: EfeitoFormaturaRoute,
   GastosRoute: GastosRoute,
   InicioRoute: InicioRoute,
   MissoesRoute: MissoesRoute,
+  OrcamentoRoute: OrcamentoRoute,
   TesteRoute: TesteRoute,
 }
 export const routeTree = rootRouteImport
