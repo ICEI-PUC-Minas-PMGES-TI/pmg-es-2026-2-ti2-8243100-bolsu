@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { useQuery } from '@tanstack/react-query'
 import { createFileRoute } from '@tanstack/react-router'
 import {
   Bus,
@@ -14,8 +14,6 @@ import {
 
 export const Route = createFileRoute('/gastos')({ component: Gastos })
 
-type Periodo = 'Semana' | 'Mês' | 'Semestre'
-
 type Categoria = {
   nome: string
   valor: number
@@ -23,61 +21,41 @@ type Categoria = {
   icone: LucideIcon
 }
 
-const PERIODOS: Periodo[] = ['Semana', 'Mês', 'Semestre']
-
 const API = 'http://localhost:8080' // URL do backend local
 
-const ORCAMENTO: Record<Periodo, number> = { Semana: 120, Mês: 500, Semestre: 3000 }
-
-// parametro que o backend espera
-const PERIODO_API: Record<Periodo, string> = { Semana: 'semana', Mês: 'mes', Semestre: 'semestre' }
-
-// visual de cada categoria (o banco guarda só o nome e o valor)
-const VISUAL: Record<string, { cor: string; icone: LucideIcon }> = {
-  'RU / Bandejão': { cor: '#10b981', icone: Utensils },
-  Lanches: { cor: '#f59e0b', icone: Pizza },
-  Transporte: { cor: '#3b82f6', icone: Bus },
-  Rolês: { cor: '#8b5cf6', icone: PartyPopper },
-  Xerox: { cor: '#64748b', icone: Printer },
-  Assinaturas: { cor: '#ec4899', icone: Smartphone },
+// o banco guarda só o NOME do ícone; aqui ficam os componentes que o desenham
+const ICONES: Record<string, LucideIcon> = {
+  Utensils,
+  Pizza,
+  Bus,
+  PartyPopper,
+  Printer,
+  Smartphone,
 }
 const VISUAL_PADRAO = { cor: '#94a3b8', icone: Plus }
 
-type Resumo = { total: number; categorias: { nome: string; valor: number }[] }
+// tudo abaixo vem do banco (MongoDB) via backend
+type PeriodoInfo = { periodo: string; rotulo: string; dias: number; valor: number }
 
-type Fonte = 'reais' | 'ficticios'
-
-// dados FICTÍCIOS, só para demonstração do visual
-const DEMO: Record<Periodo, { nome: string; valor: number }[]> = {
-  Semana: [
-    { nome: 'RU / Bandejão', valor: 28.5 },
-    { nome: 'Lanches', valor: 22 },
-    { nome: 'Transporte', valor: 18.4 },
-    { nome: 'Rolês', valor: 25 },
-    { nome: 'Xerox', valor: 4.5 },
-  ],
-  Mês: [
-    { nome: 'RU / Bandejão', valor: 112 },
-    { nome: 'Lanches', valor: 86.9 },
-    { nome: 'Transporte', valor: 96.8 },
-    { nome: 'Rolês', valor: 120 },
-    { nome: 'Xerox', valor: 18.5 },
-    { nome: 'Assinaturas', valor: 34.9 },
-  ],
-  Semestre: [
-    { nome: 'RU / Bandejão', valor: 640 },
-    { nome: 'Lanches', valor: 512.3 },
-    { nome: 'Transporte', valor: 580 },
-    { nome: 'Rolês', valor: 730.5 },
-    { nome: 'Xerox', valor: 96 },
-    { nome: 'Assinaturas', valor: 209.4 },
-  ],
+type Resumo = {
+  total: number
+  orcamento: number | null
+  categorias: { nome: string; valor: number; cor: string | null; icone: string | null }[]
 }
 
-const somar = (cats: { nome: string; valor: number }[]): Resumo => ({
-  total: cats.reduce((acc, c) => acc + c.valor, 0),
-  categorias: cats,
-})
+// busca no backend e devolve um erro que diz o motivo real da falha
+async function buscar<T>(caminho: string): Promise<T> {
+  let res: Response
+  try {
+    res = await fetch(`${API}${caminho}`)
+  } catch {
+    throw new Error(`Backend inacessível em ${API} (desligado, endereço errado ou bloqueio de CORS)`)
+  }
+  if (!res.ok) {
+    throw new Error(`O backend respondeu ${res.status} em ${caminho}`)
+  }
+  return res.json()
+}
 
 const brl = (v: number) =>
   v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
@@ -91,6 +69,7 @@ function Donut({ itens, total }: { itens: Categoria[]; total: number }) {
   return (
     <div className="relative mx-auto h-[190px] w-[190px]">
       <svg viewBox="0 0 190 190" className="h-full w-full -rotate-90">
+        <circle cx="95" cy="95" r={r} fill="none" stroke="#e2e8f0" strokeWidth="22" />
         {itens.map((i) => {
           const len = total > 0 ? (i.valor / total) * c : 0
           const seg = (
@@ -120,64 +99,43 @@ function Donut({ itens, total }: { itens: Categoria[]; total: number }) {
 }
 
 function Gastos() {
-  const [periodo, setPeriodo] = useState<Periodo>('Mês')
-  const [form, setForm] = useState(false)
-  const [fonte, setFonte] = useState<Fonte>('reais')
-  const [extrasDemo, setExtrasDemo] = useState<{ nome: string; valor: number }[]>([])
-  const queryClient = useQueryClient()
+  const [escolhido, setEscolhido] = useState<string | null>(null)
 
-  const { data, isLoading, isError } = useQuery<Resumo>({
-    queryKey: ['gastos', periodo],
-    queryFn: async () => {
-      const res = await fetch(`${API}/gastos/resumo?periodo=${PERIODO_API[periodo]}`)
-      if (!res.ok) throw new Error('Falha ao buscar gastos')
-      return res.json()
-    },
+  // períodos (abas) cadastrados no banco
+  const periodosQuery = useQuery<PeriodoInfo[]>({
+    queryKey: ['periodos'],
+    queryFn: () => buscar<PeriodoInfo[]>('/orcamentos'),
     retry: false,
-    enabled: fonte === 'reais',
+  })
+  const periodos = periodosQuery.data ?? []
+  // se nada foi escolhido, usa o primeiro período do banco
+  const periodo = escolhido ?? periodos[0]?.periodo ?? null
+
+  const { data, isLoading, isError, error: erroResumo } = useQuery<Resumo>({
+    queryKey: ['gastos', periodo],
+    queryFn: () => buscar<Resumo>(`/gastos/resumo?periodo=${periodo}`),
+    retry: false,
+    enabled: periodo !== null,
   })
 
-  const novoGasto = useMutation({
-    mutationFn: async (g: { categoria: string; valor: number; descricao: string }) => {
-      if (fonte === 'ficticios') {
-        // modo demonstração: só guarda na memória da tela
-        setExtrasDemo((e) => [...e, { nome: g.categoria, valor: g.valor }])
-        return
-      }
-      const res = await fetch(`${API}/gastos`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(g),
-      })
-      if (!res.ok) throw new Error('Falha ao salvar gasto')
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['gastos'] })
-      setForm(false)
-    },
-  })
+  const erro = periodosQuery.isError || isError
+  const motivoErro = (periodosQuery.error ?? erroResumo)?.message
+  const carregando = periodosQuery.isLoading || (periodo !== null && isLoading)
+  const semPeriodos = !periodosQuery.isLoading && !periodosQuery.isError && periodos.length === 0
 
-  // se o backend falhar ou estiver vazio, cai automaticamente nos dados fictícios
-  const realIndisponivel = fonte === 'reais' && !isLoading && (isError || (data?.categorias.length ?? 0) === 0)
-  const usandoDemo = fonte === 'ficticios' || realIndisponivel
-
-  const demoResumo = somar(
-    Object.values(
-      [...DEMO[periodo], ...extrasDemo].reduce<Record<string, { nome: string; valor: number }>>((acc, c) => {
-        acc[c.nome] = { nome: c.nome, valor: (acc[c.nome]?.valor ?? 0) + c.valor }
-        return acc
-      }, {}),
-    ),
-  )
-  const resumo: Resumo = usandoDemo ? demoResumo : (data ?? { total: 0, categorias: [] })
+  // só dados reais: se o backend falhar ou estiver vazio, nada é inventado
+  const resumo: Resumo = erro || !data ? { total: 0, orcamento: null, categorias: [] } : data
+  const semGastos = !carregando && !erro && !semPeriodos && resumo.categorias.length === 0
 
   const categorias: Categoria[] = resumo.categorias.map((c) => ({
     nome: c.nome,
     valor: c.valor,
-    ...(VISUAL[c.nome] ?? VISUAL_PADRAO),
+    cor: c.cor ?? VISUAL_PADRAO.cor,
+    icone: (c.icone && ICONES[c.icone]) || VISUAL_PADRAO.icone,
   }))
   const total = resumo.total
-  const restante = ORCAMENTO[periodo] - total
+  const orcamento = resumo.orcamento
+  const restante = orcamento === null ? null : orcamento - total
   const grafico = categorias
 
   return (
@@ -187,46 +145,37 @@ function Gastos() {
         <header className="border-b border-slate-200/70 bg-white px-5 pb-4 pt-8 lg:flex lg:items-center lg:justify-between lg:px-10 lg:py-6">
           <h1 className="text-[22px] font-extrabold lg:text-3xl">Seus gastos</h1>
           <div className="mt-4 flex gap-2 lg:mt-0">
-            {PERIODOS.map((p) => (
+            {periodos.map((p) => (
               <button
-                key={p}
-                onClick={() => setPeriodo(p)}
+                key={p.periodo}
+                onClick={() => setEscolhido(p.periodo)}
                 className={`rounded-full px-4 py-1.5 text-[13px] font-semibold transition-colors ${
-                  p === periodo
+                  p.periodo === periodo
                     ? 'bg-emerald-500 text-white'
                     : 'bg-slate-100 text-slate-500 hover:bg-slate-200'
                 }`}
               >
-                {p}
+                {p.rotulo}
               </button>
             ))}
           </div>
         </header>
 
-        <div className="flex flex-wrap items-center gap-3 px-5 pt-4 lg:px-10">
-          <div className="flex gap-1 rounded-full bg-slate-200/60 p-1 text-[12px] font-semibold">
-            {(['reais', 'ficticios'] as Fonte[]).map((f) => (
-              <button
-                key={f}
-                onClick={() => setFonte(f)}
-                className={`rounded-full px-3 py-1 transition-colors ${
-                  f === fonte ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500'
-                }`}
-              >
-                {f === 'reais' ? 'Dados reais' : 'Dados fictícios'}
-              </button>
-            ))}
+        {erro && (
+          <div className="mx-5 mt-4 rounded-xl bg-red-50 px-4 py-3 text-[13px] font-semibold text-red-700 lg:mx-10">
+            Não foi possível carregar os dados. {motivoErro}
           </div>
-          {usandoDemo && (
-            <span className="rounded-full bg-amber-100 px-3 py-1 text-[12px] font-semibold text-amber-800">
-              {fonte === 'ficticios'
-                ? 'Modo demonstração: valores inventados'
-                : isError
-                  ? 'Backend indisponível: mostrando dados fictícios'
-                  : 'Banco vazio: mostrando dados fictícios'}
-            </span>
-          )}
-        </div>
+        )}
+        {semPeriodos && (
+          <div className="mx-5 mt-4 rounded-xl bg-amber-50 px-4 py-3 text-[13px] font-semibold text-amber-800 lg:mx-10">
+            Nenhum período cadastrado no banco de dados.
+          </div>
+        )}
+        {semGastos && (
+          <div className="mx-5 mt-4 rounded-xl bg-amber-50 px-4 py-3 text-[13px] font-semibold text-amber-800 lg:mx-10">
+            Nenhum gasto registrado nesse período.
+          </div>
+        )}
 
         <main className="mx-auto grid max-w-6xl gap-6 px-5 pt-5 lg:grid-cols-[380px_1fr] lg:items-start lg:gap-8 lg:px-10 lg:pt-8">
           {/* Resumo + gráfico */}
@@ -238,13 +187,17 @@ function Gastos() {
               </div>
               <div className="rounded-2xl border border-emerald-200 bg-emerald-50 p-4">
                 <p className="text-[11px] font-bold tracking-wider text-emerald-700">RESTANTE</p>
-                <p
-                  className={`mt-1 text-xl font-extrabold ${
-                    restante >= 0 ? 'text-emerald-500' : 'text-red-500'
-                  }`}
-                >
-                  {brl(restante)}
-                </p>
+                {restante === null ? (
+                  <p className="mt-1 text-sm font-bold text-slate-500">Orçamento não cadastrado</p>
+                ) : (
+                  <p
+                    className={`mt-1 text-xl font-extrabold ${
+                      restante >= 0 ? 'text-emerald-500' : 'text-red-500'
+                    }`}
+                  >
+                    {brl(restante)}
+                  </p>
+                )}
               </div>
             </div>
             <Donut itens={grafico} total={total} />
@@ -253,10 +206,9 @@ function Gastos() {
           {/* Lista por categoria */}
           <section>
             <h2 className="mb-3 text-base font-extrabold lg:text-lg">Por categoria</h2>
-            {fonte === 'reais' && isLoading && <p className="text-sm text-slate-500">Carregando...</p>}
-            {!isLoading && categorias.length === 0 && (
-              <p className="text-sm text-slate-500">Nenhum gasto nesse período.</p>
-            )}
+            {carregando && <p className="text-sm text-slate-500">Carregando...</p>}
+            {erro && <p className="text-sm text-red-500">Erro ao carregar os gastos.</p>}
+            {semGastos && <p className="text-sm text-slate-500">Nenhum gasto nesse período.</p>}
             <ul className="grid gap-3 sm:grid-cols-2">
               {categorias.map(({ nome, valor, cor, icone: Icone }) => (
                 <li
@@ -282,46 +234,6 @@ function Gastos() {
           </section>
         </main>
       </div>
-
-      <button
-        aria-label="Adicionar gasto"
-        onClick={() => setForm(true)}
-        className="fixed bottom-6 right-5 z-20 flex h-12 items-center justify-center gap-2 rounded-full bg-emerald-500 px-3.5 font-bold text-white shadow-lg shadow-emerald-500/40 transition-transform active:scale-95 lg:bottom-8 lg:right-10 lg:px-5"
-      >
-        <Plus size={24} />
-        <span className="hidden lg:inline">Novo gasto</span>
-      </button>
-
-      {form && (
-        <div className="fixed inset-0 z-30 flex items-center justify-center bg-black/40 p-4">
-          <form
-            className="w-full max-w-sm space-y-3 rounded-2xl bg-white p-5"
-            onSubmit={(e) => {
-              e.preventDefault()
-              const f = new FormData(e.currentTarget)
-              novoGasto.mutate({
-                categoria: String(f.get('categoria')),
-                valor: Number(f.get('valor')),
-                descricao: String(f.get('descricao') ?? ''),
-              })
-            }}
-          >
-            <h2 className="text-lg font-extrabold">Novo gasto</h2>
-            <select name="categoria" className="w-full rounded-lg border p-2">
-              {Object.keys(VISUAL).map((n) => (
-                <option key={n}>{n}</option>
-              ))}
-            </select>
-            <input name="valor" type="number" step="0.01" min="0" required placeholder="Valor (R$)" className="w-full rounded-lg border p-2" />
-            <input name="descricao" placeholder="Descrição (opcional)" className="w-full rounded-lg border p-2" />
-            {novoGasto.isError && <p className="text-sm text-red-500">Erro ao salvar.</p>}
-            <div className="flex justify-end gap-2">
-              <button type="button" onClick={() => setForm(false)} className="rounded-full px-4 py-2 text-sm">Cancelar</button>
-              <button type="submit" className="rounded-full bg-emerald-500 px-4 py-2 text-sm font-bold text-white">Salvar</button>
-            </div>
-          </form>
-        </div>
-      )}
     </div>
   )
 }
