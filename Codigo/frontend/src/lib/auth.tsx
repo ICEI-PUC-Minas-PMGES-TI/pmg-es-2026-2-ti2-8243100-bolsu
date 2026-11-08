@@ -1,8 +1,9 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
 import { apiJson, SESSION_EVENT, sessionToken, setSession } from './api'
+import type { DadosAcademicos, DadosFinanceiros } from './registration'
 
-export type UsuarioAtual = { nomeCompleto: string; email: string; celular?: string }
+export type UsuarioAtual = { nomeCompleto: string; email: string; celular?: string; dadosAcademicos?: DadosAcademicos | null; dadosFinanceiros?: DadosFinanceiros | null }
 type Auth = { user: UsuarioAtual | null; loading: boolean; error: string; retry: () => void; logout: () => void }
 const AuthContext = createContext<Auth | null>(null)
 

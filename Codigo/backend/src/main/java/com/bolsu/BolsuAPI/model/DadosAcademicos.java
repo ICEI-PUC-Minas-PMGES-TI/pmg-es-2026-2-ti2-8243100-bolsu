@@ -11,6 +11,15 @@ public class DadosAcademicos {
     private String instituicao;
     private String campus;
     private String curso;
+    private Integer semestre;
+
+    public Integer getSemestre() {
+        return semestre;
+    }
+
+    public void setSemestre(Integer semestre) {
+        this.semestre = semestre;
+    }
 
     public DadosAcademicos() {
     }

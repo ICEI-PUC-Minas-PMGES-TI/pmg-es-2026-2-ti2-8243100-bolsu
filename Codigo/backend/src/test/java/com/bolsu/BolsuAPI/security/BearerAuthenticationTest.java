@@ -69,6 +69,33 @@ class BearerAuthenticationTest {
         when(context.getBean(UsuarioService.class).add(any())).thenReturn(usuario);
     }
 
+    @Test
+    void configuracaoFinanceiraExigeSessaoEUsaUsuarioDoToken() throws Exception {
+        String body = "{\"faixaRendaMensal\":650.5,\"fontesRenda\":[\"Estágio\"],\"objetivos\":[\"Viajar\"]}";
+        mvc.perform(put("/users/current/registration-configs")
+                .contentType("application/json").content(body)).andExpect(status().isUnauthorized());
+        UsuarioService service = context.getBean(UsuarioService.class);
+        verify(service, never()).configurarFinancas(any(), any());
+        Usuario atual = service.getById("usuario-1");
+        when(service.configurarFinancas(eq("usuario-1"), any())).thenReturn(atual);
+        mvc.perform(put("/users/current/registration-configs")
+                .header(HttpHeaders.AUTHORIZATION, "Bearer " + JwtUtil.generateToken("usuario-1"))
+                .contentType("application/json").content(body))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.senha").doesNotExist());
+        verify(service).configurarFinancas(eq("usuario-1"), any());
+    }
+
+    @Test
+    void cadastroRetornaMensagemUtilQuandoEmailJaExiste() throws Exception {
+        when(context.getBean(UsuarioService.class).add(any())).thenThrow(
+                new org.springframework.web.server.ResponseStatusException(
+                        org.springframework.http.HttpStatus.CONFLICT, "Já existe um usuário com este e-mail"));
+        mvc.perform(post("/users").contentType("application/json")
+                .content("{\"nomeCompleto\":\"Maria\",\"email\":\"maria@email.com\",\"senha\":\"Senha1234\"}"))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.message").value("Já existe um usuário com este e-mail"));
+    }
+
     @AfterEach
     void tearDown() {
         context.close();

@@ -125,6 +125,30 @@ public class UsuarioService {
         return passwordEncoder.matches(senhaDigitada, senhaCripto);
     }
 
+    public Usuario configurarFinancas(String id, DadosFinanceiros dados) throws NotFoundException {
+        Usuario usuario = getById(id);
+        if (dados == null) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Informe os dados financeiros");
+        }
+        validarDadosFinanceiros(dados);
+        usuario.setDadosFinanceiros(salvarDadosFinanceiros(dados, usuario.getDadosFinanceiros()));
+        return usuarioRepository.save(usuario);
+    }
+
+    private void validarDadosFinanceiros(DadosFinanceiros dados) {
+        if (dados == null) return;
+        if (!Double.isFinite(dados.getFaixaRendaMensal()) || dados.getFaixaRendaMensal() < 0) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "A renda mensal deve ser um valor não negativo");
+        }
+        if (dados.getFontesRenda() == null || dados.getFontesRenda().stream().anyMatch(v -> !temTexto(v))) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Informe fontes de renda válidas");
+        }
+        if (dados.getObjetivos() == null || dados.getObjetivos().isEmpty()
+                || dados.getObjetivos().stream().anyMatch(v -> !temTexto(v))) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Selecione ao menos um objetivo");
+        }
+    }
+
     private DadosAcademicos salvarDadosAcademicos(DadosAcademicos dados, DadosAcademicos dadosAtuais) {
         if (dados == null) {
             return null;
@@ -166,6 +190,20 @@ public class UsuarioService {
         if (senhaObrigatoria && !temTexto(usuarioRequestDTO.senha())) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "A senha é obrigatória");
         }
+        if (!usuarioRequestDTO.email().trim().matches("^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$")) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Informe um e-mail válido");
+        }
+        if (temTexto(usuarioRequestDTO.senha()) && (usuarioRequestDTO.senha().length() < 8
+                || !usuarioRequestDTO.senha().matches(".*[\\p{L}].*")
+                || !usuarioRequestDTO.senha().matches(".*[0-9].*")
+                || usuarioRequestDTO.senha().getBytes(java.nio.charset.StandardCharsets.UTF_8).length > 72)) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "A senha deve ter no mínimo 8 caracteres, com letras e números, e no máximo 72 bytes");
+        }
+        DadosAcademicos academicos = usuarioRequestDTO.dadosAcademicos();
+        if (academicos != null && academicos.getSemestre() != null && academicos.getSemestre() < 1) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "O semestre deve ser maior que zero");
+        }
+        validarDadosFinanceiros(usuarioRequestDTO.dadosFinanceiros());
     }
 
     private void validarEmailUnico(String email, Usuario usuarioAtual) {

@@ -4,11 +4,14 @@ import com.bolsu.BolsuAPI.dto.UsuarioRequestDTO;
 import com.bolsu.BolsuAPI.dto.UsuarioResponseDTO;
 import com.bolsu.BolsuAPI.exception.NotFoundException;
 import com.bolsu.BolsuAPI.model.Usuario;
+import com.bolsu.BolsuAPI.model.DadosFinanceiros;
 import com.bolsu.BolsuAPI.service.UsuarioService;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -32,6 +35,12 @@ public class UsuarioController {
 
     public UsuarioController(UsuarioService usuarioService) {
         this.usuarioService = usuarioService;
+    }
+
+    @ExceptionHandler(ResponseStatusException.class)
+    public ResponseEntity<Map<String, String>> erroDeValidacao(ResponseStatusException exception) {
+        return ResponseEntity.status(exception.getStatusCode())
+                .body(Map.of("message", exception.getReason() == null ? "Não foi possível concluir a solicitação" : exception.getReason()));
     }
 
     @GetMapping
@@ -78,6 +87,12 @@ public class UsuarioController {
                 .toUri();
 
         return ResponseEntity.created(location).body(usuario);
+    }
+
+    @PutMapping("/current/registration-configs")
+    public ResponseEntity<Usuario> configurarFinancas(@RequestBody DadosFinanceiros dados, Principal principal)
+            throws NotFoundException {
+        return ResponseEntity.ok(usuarioService.configurarFinancas(principal.getName(), dados));
     }
 
     @PutMapping("/{id}")
