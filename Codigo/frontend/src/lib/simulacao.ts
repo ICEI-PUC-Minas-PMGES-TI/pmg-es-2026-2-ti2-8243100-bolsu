@@ -15,8 +15,13 @@ export function mesesEntre(inicio: string, fim: string): number {
 }
 
 export function mesAtual() {
+  return dataAtual().slice(0, 7)
+}
+
+export function dataAtual() {
   const partes = new Intl.DateTimeFormat('pt-BR', {
-    timeZone: 'America/Sao_Paulo', year: 'numeric', month: '2-digit',
+    timeZone: 'America/Sao_Paulo', year: 'numeric', month: '2-digit', day: '2-digit',
   }).formatToParts(new Date())
-  return `${partes.find(p => p.type === 'year')!.value}-${partes.find(p => p.type === 'month')!.value}`
+  const valor = (tipo: Intl.DateTimeFormatPartTypes) => partes.find(p => p.type === tipo)!.value
+  return `${valor('year')}-${valor('month')}-${valor('day')}`
 }

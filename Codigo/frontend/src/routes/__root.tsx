@@ -4,7 +4,7 @@ import { HeadContent, Scripts, createRootRouteWithContext, Outlet, Link, useLoca
 import type { QueryClient } from '@tanstack/react-query'
 import { TanStackRouterDevtoolsPanel } from '@tanstack/react-router-devtools'
 import { TanStackDevtools } from '@tanstack/react-devtools'
-import { Home, Target, TrendingUp, User } from 'lucide-react'
+import { Flag, Home, Target, TrendingUp, User } from 'lucide-react'
 
 import appCss from '../styles.css?url'
 
@@ -60,6 +60,7 @@ function RootLayout() {
       <nav aria-label="Navegação principal" className="fixed bottom-0 left-0 right-0 z-50 flex h-20 w-full items-center justify-around rounded-t-3xl bg-card px-6 pb-4 pt-2 shadow-lg border-t border-border">
         <NavItem to="/inicio" icon={<Home size={24} />} label="Início" />
         <NavItem to="/missoes" icon={<Target size={24} />} label="Missões" />
+        <NavItem to="/metas" icon={<Flag size={24} />} label="Metas" />
         <NavItem to="/efeito-formatura" icon={<TrendingUp size={24} />} label="Futuro" />
         <NavItem to="/perfil" icon={<User size={24} />} label="Perfil" />
       </nav>
