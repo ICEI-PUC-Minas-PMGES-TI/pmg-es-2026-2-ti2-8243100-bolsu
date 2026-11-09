@@ -1,0 +1,149 @@
+.bolsu { --ink:#141c30; --muted:#647897; --green:#00bd87; --purple:#5033ff; color:var(--ink); background:#f7f9f9; min-height:100dvh; font-family:Manrope,sans-serif; line-height:1.5; color-scheme:light; }
+.bolsu * { box-sizing:border-box; }
+.bolsu button,.bolsu input { font:inherit; }
+.bolsu button,.bolsu a { -webkit-tap-highlight-color:transparent; }
+.bolsu button:not(:disabled),.bolsu a { cursor:pointer; }
+.bolsu button:disabled { cursor:default; opacity:.55; }
+.bolsu a { text-decoration:none; }
+.bolsu button:focus-visible,.bolsu a:focus-visible,.bolsu input:focus-visible { outline:3px solid #8d7bff; outline-offset:4px; }
+.bolsu-workspace { min-height:100dvh; }
+.bolsu-content { max-width:600px; margin:0 auto; padding-bottom:110px; }
+.bolsu h1 { font-size:25px; font-weight:800; letter-spacing:-1px; margin:0; }
+.page-eyebrow,.desktop-description,.desktop-tip,.sidebar-brand,.sidebar-caption,.sidebar-note,.bolsu .desktop-graduation { display:none; }
+.missions-header { padding:38px 24px 18px; border-bottom:1px solid #dfe6ee; }
+.missions-header p { color:var(--muted); font-weight:600; font-size:14px; margin:4px 0 19px; }
+.stats-grid { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+.stat { background:white; border:1px solid #dce4ed; border-radius:14px; padding:9px 13px; display:flex; gap:10px; align-items:center; box-shadow:0 2px 2px #19253418; }
+.stat span { display:block; font-size:10px; font-weight:800; color:var(--muted); }
+.stat strong { font-size:14px; font-weight:800; }
+.gold { color:#ffbd19; }
+.missions-body { padding:24px; }
+.section-caption { display:flex; justify-content:space-between; font-size:10px; color:var(--muted); font-weight:700; letter-spacing:.7px; margin-bottom:16px; }
+.mission-grid { display:grid; gap:16px; }
+.mission-card { display:flex; align-items:flex-start; gap:16px; padding:20px; background:white; border:1px solid #dce4ee; border-radius:17px; box-shadow:0 2px 2px #19253418; min-width:0; }
+.round-icon { display:flex; flex-shrink:0; align-items:center; justify-content:center; height:48px; width:48px; border-radius:50%; color:white; box-shadow:0 2px 3px #19253420; }
+.round-icon.orange { background:#ff7100; } .round-icon.green { background:var(--green); } .round-icon.blue { background:#307dff; }
+.mission-content { flex:1; min-width:0; }
+.mission-heading { display:flex; align-items:flex-start; gap:6px; justify-content:space-between; }
+.mission-heading h2 { font-size:15px; line-height:1.3; font-weight:800; letter-spacing:-.35px; margin:1px 0 7px; overflow-wrap:anywhere; }
+.reward { flex-shrink:0; display:inline-flex; gap:3px; align-items:center; padding:2px 7px; border-radius:20px; color:#914206; background:#fff9eb; border:1px solid #ffe5ac; font-size:11px; font-weight:800; white-space:nowrap; }
+.mission-content>p { color:var(--muted); font-size:13px; margin:0 0 19px; }
+.mission-goal { display:flex; justify-content:space-between; align-items:baseline; gap:8px; font-size:11px; margin:0 0 7px; }
+.mission-goal>span { color:var(--muted); } .mission-goal strong { font-size:13px; font-weight:800; }
+.goal-track { height:7px; background:#eff3f8; border-radius:20px; }
+.mission-period { display:block; font-size:10px; color:var(--muted); margin-top:10px; }
+.missions-extras { display:grid; gap:20px; margin-top:30px; }
+.next-missions { text-align:center; background:#e0f4ed; border:1px solid #abe7d6; border-radius:24px; padding:24px 16px; color:#009b70; }
+.next-missions .round-icon { margin:0 auto 14px; }
+.next-missions h2 { font-size:16px; font-weight:800; margin:0 0 4px; }
+.next-missions p { font-size:13px; margin:0; line-height:1.8; }
+.graduation-link { display:flex; align-items:center; gap:12px; padding:20px; border:1px solid #e3ddff; border-radius:20px; color:#5842db; background:#f0edff; }
+.graduation-link>svg { flex-shrink:0; } .graduation-link span { flex:1; } .graduation-link strong { display:block; font-size:13px; } .graduation-link small { display:block; font-size:11px; margin-top:4px; }
+.bolsu-nav { position:fixed; z-index:10; bottom:0; left:0; width:100%; padding:10px 14px calc(13px + env(safe-area-inset-bottom)); display:flex; align-items:center; justify-content:space-around; background:#ffffffed; backdrop-filter:blur(12px); border-top:1px solid #dfe6ee; }
+.nav-item { display:flex; flex-direction:column; justify-content:center; align-items:center; gap:5px; color:var(--muted); min-width:48px; height:54px; font-size:9px!important; border:0; background:none; padding:0; }
+.nav-icon { display:flex; align-items:center; justify-content:center; width:55px; height:30px; border-radius:25px; }
+.nav-item.selected { color:#00a879; } .selected .nav-icon { background:#e2f6ef; }
+.unavailable { opacity:.5; }
+.formatura { padding:25px 24px 110px; }
+.formatura-header { display:flex; justify-content:space-between; align-items:center; gap:10px; margin-bottom:26px; }
+.formatura-header h1 { display:flex; gap:9px; align-items:center; color:#5c3eff; font-size:20px; letter-spacing:-.5px; font-weight:800; }
+.formatura-header>a { display:flex; flex-shrink:0; align-items:center; justify-content:center; width:36px; height:36px; border-radius:50%; background:#eff3f7; color:var(--muted); }
+.formatura-grid { display:grid; gap:24px; }
+.monthly-label { display:block; font-size:18px; font-weight:800; letter-spacing:-.75px; margin-bottom:17px; }
+.monthly-input { display:flex; align-items:center; justify-content:center; gap:5px; border:1px solid #dce0ff; border-radius:24px; background:#eef0ff; height:110px; margin-bottom:20px; }
+.monthly-input>span { font-size:24px; font-weight:800; color:#6246ff; }
+.monthly-input input { background:none; border:0; color:#352d85; font-size:48px; font-weight:800; letter-spacing:-2px; max-width:75%; min-width:60px; text-align:center; font-variant-numeric:tabular-nums; }
+.date-label { display:block; font-size:13px; font-weight:800; color:var(--muted); margin-bottom:6px; }
+.month-select { width:100%; height:47px; padding:8px 16px; border:1px solid #dce4ee; border-radius:17px; background:white; color:var(--ink); font-size:14px!important; font-weight:700!important; }
+.simulation-hint { color:var(--muted); font-size:11px; margin:12px 0 0; }
+.projection { border-radius:31px; padding:24px; color:white; background:linear-gradient(130deg,#6857ff 0%,#7934fc 58%,#9607fa 100%); box-shadow:0 12px 18px #6c4bff38; overflow:hidden; }
+.projection>p:first-child { margin:0 0 3px; font-size:15px; color:#f1eaff; }
+.projected-total { display:block; font-size:clamp(35px,11vw,49px); letter-spacing:-2px; font-weight:800; line-height:1.2; overflow-wrap:anywhere; }
+.projection-caption { color:#e5dbff; font-size:10px; margin:7px 0 0; }
+.projection-chart { width:100%; height:auto; display:block; margin:24px 0 15px; }
+.equivalence { display:flex; align-items:center; gap:10px; background:#ffffff26; border-radius:12px; padding:10px 12px; margin-bottom:8px; }
+.equivalence>span { display:flex; flex-shrink:0; align-items:center; justify-content:center; width:32px; height:32px; border-radius:50%; background:#ffffff26; }
+.equivalence p { margin:0; font-size:12px; line-height:1.5; font-weight:600; }
+.projection-note { display:flex; align-items:flex-start; gap:9px; color:#e7dcff; margin:21px 0 0; font-size:11px; }
+.projection-note svg { flex-shrink:0; margin-top:2px; }
+.primary-button { display:flex; align-items:center; justify-content:center; gap:10px; width:100%; background:var(--purple); border:0; color:white; padding:18px 12px; font-weight:800!important; border-radius:17px; box-shadow:0 7px 10px #5134ff35; }
+.primary-button:hover:not(:disabled) { background:#4427eb; }
+.simulation-summary { padding:18px; border:1px solid #dce4ee; background:white; border-radius:16px; margin-top:18px; font-size:13px; }
+.simulation-summary strong { color:#009b70; } .simulation-summary p { color:var(--muted); font-size:12px; margin:7px 0 0; }
+.secondary-button { display:inline-flex; align-items:center; justify-content:center; gap:6px; border:0; color:white; background:#5742de; border-radius:9px; padding:10px 16px; font-size:12px!important; font-weight:700!important; margin-top:7px; }
+.fine-print { color:var(--muted); font-size:11px; line-height:1.7; }
+.page-note { text-align:center; margin:20px 5px 0; }
+.error-message { color:#af302f; font-size:11px; line-height:1.6; margin-top:10px; }
+.query-state { padding:45px 20px; text-align:center; color:var(--muted); font-size:13px; border:1px dashed #d3dce8; border-radius:20px; }
+.query-state>svg { margin:0 auto 15px; color:#6857ff; }
+.query-state h2 { color:var(--ink); font-size:18px; font-weight:800; }
+.query-state p { margin:12px 0; }
+.loading-dot { display:inline-block; width:22px; height:22px; border-radius:50%; border:3px solid #ded9ff; border-top-color:#6750ff; animation:bolsu-spin 1s linear infinite; }
+@keyframes bolsu-spin { to { transform:rotate(360deg); } }
+@media (prefers-reduced-motion:reduce) { .bolsu * { animation:none!important; transition:none!important; } }
+@media (max-width:370px) { .missions-header { padding:28px 16px 18px; } .missions-body { padding:18px 16px; } .mission-card { padding:16px 12px; gap:10px; } .round-icon { width:39px; height:39px; } .mission-heading h2 { font-size:14px; } .formatura { padding:23px 17px 110px; } .projection { padding:20px; } .formatura-header h1 { font-size:18px; } }
+@media (min-width:900px) {
+  .bolsu-nav { inset:0 auto 0 0; width:232px; height:100dvh; overflow-y:auto; flex-direction:column; align-items:stretch; justify-content:flex-start; gap:8px; padding:36px 20px 24px; border-top:0; border-right:1px solid #e2e9ec; background:white; }
+  .sidebar-brand { display:flex; align-items:center; font-size:29px; font-weight:800; letter-spacing:-1px; color:var(--ink); margin:0 8px 35px; }
+  .sidebar-brand>span:first-child { display:grid; place-items:center; width:36px; height:39px; border-radius:12px; background:var(--green); color:white; font-size:25px; margin-right:10px; }
+  .sidebar-brand .brand-u { color:var(--green); }
+  .sidebar-caption { display:block; color:#8a9bb0; font-size:9px; letter-spacing:1.3px; font-weight:800; margin:0 15px 6px; }
+  .nav-item { flex-direction:row; justify-content:flex-start; gap:13px; padding:0 16px; min-height:48px; height:48px; border-radius:12px; font-size:13px!important; font-weight:700!important; }
+  .nav-item.selected { background:#e5f7f0; color:#00996e; }
+  .nav-icon { width:22px; height:24px; border-radius:0; } .selected .nav-icon { background:none; }
+  .future-caption { margin-top:27px; }
+  .bolsu .desktop-graduation { display:flex; font-size:12px!important; }
+  .desktop-graduation.selected { background:#f0ecff; color:#6745e8; }
+  .sidebar-note { display:block; margin-top:auto; padding:25px 14px 0; color:#7b8a9f; }
+  .sidebar-note>svg { color:var(--green); margin-bottom:12px; }
+  .sidebar-note strong { display:block; color:#3b5067; font-size:12px; line-height:1.8; }
+  .sidebar-note p { font-size:10px; line-height:1.8; margin:8px 0 0; }
+  .bolsu-workspace { margin-left:0; padding:48px 32px; }
+  .bolsu-content { max-width:1180px; padding:0; }
+  .page-eyebrow { display:block; color:#91a0b3; font-size:10px; font-weight:800; letter-spacing:1.5px; margin-bottom:10px; }
+  .bolsu h1 { font-size:32px; }
+  .missions-header { display:flex; justify-content:space-between; align-items:center; gap:24px; border-bottom:0; padding:0 0 35px; }
+  .missions-header p { font-size:14px; margin:8px 0 0; }
+  .stats-grid { min-width:235px; gap:12px; } .stat { padding:14px 16px; gap:12px; box-shadow:none; }
+  .stat strong { font-size:19px; } .stat span { font-size:9px; }
+  .missions-body { padding:0; }
+  .section-caption { margin:8px 0 20px; font-size:11px; }
+  .mission-grid { grid-template-columns:repeat(2,minmax(0,1fr)); gap:20px; }
+  .mission-card { display:flex; flex-direction:column; gap:20px; padding:24px; border-radius:22px; box-shadow:0 4px 14px #26364a04; }
+  .mission-content { display:flex; flex-direction:column; width:100%; }
+  .mission-heading h2 { font-size:17px; max-width:190px; }
+  .mission-content>p { min-height:62px; font-size:13px; margin:6px 0 23px; }
+  .mission-goal { margin-top:auto; }
+  .mission-period { margin-top:14px; }
+  .round-icon { width:53px; height:53px; }
+  .missions-extras { grid-template-columns:1fr 1fr; gap:20px; margin-top:28px; }
+  .next-missions { padding:24px; display:flex; align-items:center; gap:18px; text-align:left; border-radius:20px; }
+  .next-missions .round-icon { margin:0; } .next-missions h2 { font-size:15px; } .next-missions p { font-size:11px; } .mobile-break { display:none; }
+  .graduation-link { padding:24px; } .graduation-link strong { font-size:14px; }
+  .page-note { text-align:left; margin-left:0; margin-top:24px; font-size:11px; }
+  .formatura { max-width:1100px; }
+  .formatura-header { margin-bottom:32px; }
+  .formatura-header h1 { font-size:30px; gap:12px; }
+  .formatura-header h1>svg { width:30px; height:30px; }
+  .desktop-description { display:block; margin:10px 0 0; font-size:13px; color:var(--muted); }
+  .formatura-grid { grid-template-columns:minmax(0,1fr) minmax(0,1fr); grid-template-rows:auto 1fr; gap:24px 30px; align-items:start; }
+  .simulation-controls { grid-column:1; grid-row:1; background:white; padding:26px; border:1px solid #e0e7ee; border-radius:24px; }
+  .monthly-label { font-size:20px; letter-spacing:-.6px; }
+  .monthly-input { height:120px; margin:20px 0 25px; }
+  .projection { grid-column:2; grid-row:1 / 3; padding:30px; border-radius:28px; }
+  .projection-chart { margin:26px 0 22px; }
+  .projected-total { font-size:52px; }
+  .simulation-action { grid-column:1; grid-row:2; }
+  .simulation-action .page-note { text-align:center; margin:18px 12px 0; }
+  .desktop-tip { display:block; border-top:1px solid #eef0f5; margin-top:25px; padding-top:22px; }
+  .desktop-tip>svg { color:#7d65d8; margin-bottom:10px; } .desktop-tip h2 { font-size:14px; font-weight:800; margin:0 0 6px; } .desktop-tip p { font-size:12px; color:var(--muted); margin:0; line-height:1.8; }
+}
+@media (min-width:1240px) {
+  .bolsu-workspace { padding:54px 52px; }
+  .mission-grid { grid-template-columns:repeat(3,minmax(0,1fr)); }
+  .stats-grid { min-width:290px; }
+  .mission-heading { min-height:49px; }
+  .mission-heading h2 { font-size:17px; }
+  .formatura-grid { gap:28px 45px; }
+  .projection { padding:32px; }
+}

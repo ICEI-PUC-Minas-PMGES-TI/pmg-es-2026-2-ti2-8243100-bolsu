@@ -93,6 +93,7 @@ function Orcamento() {
 
   return (
     <div className="min-h-screen bg-[#f6f9f7] text-slate-900" style={{ fontFamily: 'Manrope, sans-serif' }}>
+      <p role="note" className="bg-amber-50 px-5 py-3 text-sm text-amber-900">Demonstração: valores de exemplo; alterações não são salvas no servidor.</p>
       <div className="mx-auto flex min-h-screen w-full max-w-md flex-col">
         <main className="flex-1 px-5 pb-28 pt-10">
           {/* Cabeçalho */}

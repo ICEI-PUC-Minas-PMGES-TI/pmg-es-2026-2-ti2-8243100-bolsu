@@ -1,3 +1,5 @@
+import { useQueryClient } from '@tanstack/react-query'
+import { apiJson } from '../lib/api'
 import { useState } from 'react'
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import {
@@ -36,6 +38,9 @@ const CATEGORIAS: Categoria[] = [
 
 function CadastroGasto() {
   const navigate = useNavigate()
+  const cache = useQueryClient()
+  const [pending, setPending] = useState(false)
+  const [error, setError] = useState('')
   const [centavos, setCentavos] = useState(0)
   const [categoriaId, setCategoriaId] = useState<number | null>(null)
   const [observacao, setObservacao] = useState('')
@@ -54,20 +59,21 @@ function CadastroGasto() {
     setCentavos(Number(digitos))
   }
 
-  function registrar() {
-    if (!podeRegistrar) return
-
-    const gasto = {
-      usuarioId: 1,
-      categoriaId,
-      valor,
-      observacao: observacao.trim(),
-      data: new Date().toISOString().slice(0, 10),
-    }
-
-    // por enquanto só mostra no console (trocar por chamada à API quando tiver backend)
-    console.log('Gasto registrado:', gasto)
-    navigate({ to: '/' }) // depois do merge, trocar por '/gastos'
+  async function registrar() {
+    if (!podeRegistrar || pending) return
+    setPending(true)
+    setError('')
+    try {
+      const now = new Date()
+      const data = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`
+      await apiJson('/gastos', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ categoria: CATEGORIAS.find(c => c.id === categoriaId)?.nome, valor, descricao: observacao.trim(), data }),
+      })
+      await cache.invalidateQueries({ queryKey: ['gastos'] })
+      await navigate({ to: '/gastos' })
+    } catch (reason) { setError(reason instanceof Error ? reason.message : 'Não foi possível salvar o gasto.') }
+    finally { setPending(false) }
   }
 
   return (
@@ -79,7 +85,7 @@ function CadastroGasto() {
             <h1 className="text-[22px] font-extrabold">Onde foi essa grana?</h1>
             <button
               aria-label="Fechar"
-              onClick={() => navigate({ to: '/' })} // depois do merge, trocar por '/gastos'
+              onClick={() => navigate({ to: '/gastos' })}
               className="flex h-10 w-10 items-center justify-center rounded-full bg-slate-100 text-slate-500 hover:bg-slate-200"
             >
               <X size={20} />
@@ -157,9 +163,10 @@ function CadastroGasto() {
 
         {/* Botão */}
         <footer className="border-t border-slate-200 px-5 py-4">
+          {error && <p role="alert" className="mb-3 text-red-600">{error}</p>}
           <button
             onClick={registrar}
-            disabled={!podeRegistrar}
+            disabled={!podeRegistrar || pending}
             className={`w-full rounded-2xl py-4 text-lg font-extrabold text-white transition-all ${
               podeRegistrar
                 ? 'bg-emerald-500 shadow-lg shadow-emerald-500/40 active:scale-[0.98]'
