@@ -4,7 +4,7 @@ import { HeadContent, Scripts, createRootRouteWithContext, Outlet, Link, useLoca
 import type { QueryClient } from '@tanstack/react-query'
 import { TanStackRouterDevtoolsPanel } from '@tanstack/react-router-devtools'
 import { TanStackDevtools } from '@tanstack/react-devtools'
-import { Flag, Home, Target, TrendingUp, User } from 'lucide-react'
+import { Flag, Home, Target, TrendingUp, User, Wallet, PlusCircle, ChartPie, Users, LogOut } from 'lucide-react'
 
 import appCss from '../styles.css?url'
 
@@ -50,32 +50,41 @@ function RootLayout() {
   if (auth.error) return <div className="p-8 space-y-4"><p role="alert">{auth.error}</p><button onClick={auth.retry}>Tentar novamente</button><button className="ml-4" onClick={auth.logout}>Voltar ao login</button></div>
   if (!auth.user) return null
   return (
-    <div className="min-h-screen bg-background pb-28 font-sans text-foreground">
-      <header className="flex flex-wrap items-center justify-between gap-3 border-b border-border bg-card px-5 py-3">
-        <Link to="/inicio" className="font-bold text-primary">BolsU</Link>
-        <div className="flex flex-wrap gap-4 text-sm"><Link to="/gastos">Gastos</Link><Link to="/cadastro-gasto">Registrar gasto</Link><Link to="/orcamento">Orçamento</Link><Link to="/gastos_compartilhados">Compartilhados</Link></div>
-        <button onClick={auth.logout} className="text-sm font-semibold">Sair</button>
-      </header>
-      <Outlet key={auth.user.email} />
-      <nav aria-label="Navegação principal" className="fixed bottom-0 left-0 right-0 z-50 flex h-20 w-full items-center justify-around rounded-t-3xl bg-card px-6 pb-4 pt-2 shadow-lg border-t border-border">
-        <NavItem to="/inicio" icon={<Home size={24} />} label="Início" />
-        <NavItem to="/missoes" icon={<Target size={24} />} label="Missões" />
-        <NavItem to="/metas" icon={<Flag size={24} />} label="Metas" />
-        <NavItem to="/efeito-formatura" icon={<TrendingUp size={24} />} label="Futuro" />
-        <NavItem to="/perfil" icon={<User size={24} />} label="Perfil" />
+    <div className="app-shell">
+      <a href="#page-content" className="skip-link">Pular para o conteúdo</a>
+      <nav aria-label="Navegação principal" className="app-navigation">
+        <Link to="/inicio" className="app-brand" aria-label="Bolsu — início"><span>B</span>Bolsu<span className="brand-dot">.</span></Link>
+        <p className="navigation-caption">SEU DIA A DIA</p>
+        <NavItem to="/inicio" icon={<Home size={22} />} label="Início" />
+        <NavItem to="/gastos" icon={<Wallet size={22} />} label="Gastos" desktopOnly />
+        <NavItem to="/cadastro-gasto" icon={<PlusCircle size={22} />} label="Registrar gasto" desktopOnly />
+        <NavItem to="/orcamento" icon={<ChartPie size={22} />} label="Orçamento" desktopOnly />
+        <NavItem to="/gastos_compartilhados" icon={<Users size={22} />} label="Compartilhados" desktopOnly />
+        <p className="navigation-caption navigation-section">SEUS OBJETIVOS</p>
+        <NavItem to="/missoes" icon={<Target size={22} />} label="Missões" />
+        <NavItem to="/metas" icon={<Flag size={22} />} label="Metas" />
+        <NavItem to="/efeito-formatura" icon={<TrendingUp size={22} />} label="Futuro" />
+        <div className="navigation-spacer" />
+        <NavItem to="/perfil" icon={<User size={22} />} label="Perfil" />
+        <button onClick={auth.logout} className="app-nav-item desktop-only"><LogOut size={22} /><span>Sair</span></button>
       </nav>
+      <div id="page-content" tabIndex={-1} className="app-content">
+        <Outlet key={auth.user.email} />
+      </div>
     </div>
   )
 }
 
-function NavItem({ to, icon, label }: { to: string; icon: React.ReactNode; label: string }) {
+function NavItem({ to, icon, label, desktopOnly = false }: { to: string; icon: React.ReactNode; label: string; desktopOnly?: boolean }) {
   return (
     <Link
       to={to}
-      className="flex flex-col items-center gap-1 text-muted-foreground transition-colors hover:text-primary/80 [&.active]:text-primary"
+      activeOptions={{ exact: true }}
+      activeProps={{ 'aria-current': 'page' }}
+      className={`app-nav-item${desktopOnly ? ' desktop-only' : ''}`}
     >
       {icon}
-      <span className="text-[10px] font-bold">{label}</span>
+      <span>{label}</span>
     </Link>
   )
 }

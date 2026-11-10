@@ -129,7 +129,7 @@ function GastosCompartilhados() {
           </div>
         </header>
 
-        <div className="mt-6 grid gap-6 lg:grid-cols-[1fr_360px] lg:items-start">
+        <div className="mt-6 grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,320px)] lg:items-start">
           <div className="space-y-6">
             {/* Última divisão ativa */}
             <section className="rounded-2xl bg-white p-4 shadow-sm lg:p-5">
@@ -168,7 +168,7 @@ function GastosCompartilhados() {
                   Você ainda não tem grupos. Crie o primeiro para dividir uma conta.
                 </p>
               ) : (
-                <ul className="grid gap-3 md:grid-cols-2">
+                <ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-1 2xl:grid-cols-2">
                   {grupos.map((g) => (
                     <li key={g.id}>
                       <button

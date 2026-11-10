@@ -227,7 +227,7 @@ function Gastos() {
         {fonte === 'reais' && isError && <p role="alert" className="px-5 py-3 text-red-600">Não foi possível carregar seus gastos. Tente novamente mais tarde.</p>}
         {fonte === 'reais' && isLoading && <p role="status" className="px-5 py-3">Carregando seus gastos…</p>}
         <p className="px-5 pt-3 text-sm text-slate-500">O limite de orçamento desta tela ainda é demonstrativo.</p>
-        <main className="mx-auto grid max-w-6xl gap-6 px-5 pt-5 lg:grid-cols-[380px_1fr] lg:items-start lg:gap-8 lg:px-10 lg:pt-8">
+        <main className="mx-auto grid max-w-6xl gap-6 px-5 pt-5 xl:grid-cols-[minmax(0,340px)_minmax(0,1fr)] lg:items-start lg:gap-8 lg:px-10 lg:pt-8">
           {/* Resumo + gráfico */}
           <div className="space-y-6 lg:rounded-3xl lg:border lg:border-slate-100 lg:bg-white lg:p-6 lg:shadow-[0_2px_12px_rgba(15,23,42,0.06)]">
             <div className="grid grid-cols-2 gap-3">
@@ -256,7 +256,7 @@ function Gastos() {
             {!isLoading && categorias.length === 0 && (
               <p className="text-sm text-slate-500">Nenhum gasto nesse período.</p>
             )}
-            <ul className="grid gap-3 sm:grid-cols-2">
+            <ul className="grid gap-3 sm:grid-cols-2 xl:grid-cols-1 2xl:grid-cols-2">
               {categorias.map(({ nome, valor, cor, icone: Icone }) => (
                 <li
                   key={nome}
@@ -285,7 +285,7 @@ function Gastos() {
       <button
         aria-label="Adicionar gasto"
         onClick={() => setForm(true)}
-        className="fixed bottom-6 right-5 z-20 flex h-12 items-center justify-center gap-2 rounded-full bg-emerald-500 px-3.5 font-bold text-white shadow-lg shadow-emerald-500/40 transition-transform active:scale-95 lg:bottom-8 lg:right-10 lg:px-5"
+        className="fixed bottom-24 right-5 z-20 flex h-12 items-center justify-center gap-2 rounded-full bg-emerald-500 px-3.5 font-bold text-white shadow-lg shadow-emerald-500/40 transition-transform active:scale-95 lg:bottom-8 lg:right-10 lg:px-5"
       >
         <Plus size={24} />
         <span className="hidden lg:inline">Novo gasto</span>

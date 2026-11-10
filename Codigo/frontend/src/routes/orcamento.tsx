@@ -94,7 +94,7 @@ function Orcamento() {
   return (
     <div className="min-h-screen bg-[#f6f9f7] text-slate-900" style={{ fontFamily: 'Manrope, sans-serif' }}>
       <p role="note" className="bg-amber-50 px-5 py-3 text-sm text-amber-900">Demonstração: valores de exemplo; alterações não são salvas no servidor.</p>
-      <div className="mx-auto flex min-h-screen w-full max-w-md flex-col">
+      <div className="budget-page mx-auto flex w-full max-w-md flex-col">
         <main className="flex-1 px-5 pb-28 pt-10">
           {/* Cabeçalho */}
           <header>
@@ -178,7 +178,7 @@ function Orcamento() {
         </main>
 
         {/* Botão fixo */}
-        <footer className="fixed bottom-0 left-1/2 w-full max-w-md -translate-x-1/2 bg-[#f6f9f7] px-5 pb-5 pt-3">
+        <footer className="budget-actions w-full bg-[#f6f9f7] px-5 pb-5 pt-3">
           <button
             onClick={abrirEdicao}
             className="w-full rounded-2xl bg-slate-100 py-4 text-base font-extrabold text-slate-900 transition-colors hover:bg-slate-200"
@@ -190,8 +190,8 @@ function Orcamento() {
 
       {/* Edição de limites */}
       {editando && (
-        <div className="fixed inset-0 z-30 flex items-end justify-center bg-slate-900/40">
-          <div className="max-h-[90vh] w-full max-w-md overflow-y-auto rounded-t-3xl bg-white p-5 pb-6">
+        <div className="fixed inset-0 z-[60] flex items-end justify-center bg-slate-900/40 p-4 lg:items-center">
+          <div className="max-h-[90vh] w-full max-w-md overflow-y-auto rounded-3xl bg-white p-5 pb-6">
             <h2 className="text-lg font-extrabold">Editar limites</h2>
 
             <label className="mt-4 block">

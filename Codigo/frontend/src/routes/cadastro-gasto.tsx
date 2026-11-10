@@ -78,7 +78,7 @@ function CadastroGasto() {
 
   return (
     <div className="min-h-screen bg-[#f6f9f7] text-slate-900" style={{ fontFamily: 'Manrope, sans-serif' }}>
-      <div className="mx-auto flex min-h-screen w-full max-w-md flex-col">
+      <div className="expense-form-page mx-auto flex w-full max-w-md flex-col">
         <main className="flex-1 space-y-8 px-5 pt-8">
           {/* Cabeçalho */}
           <header className="flex items-center justify-between">
@@ -112,7 +112,7 @@ function CadastroGasto() {
                 value={valorTexto}
                 onChange={(e) => aoDigitarValor(e.target.value)}
                 style={{ width: `${Math.max(valorTexto.length, 4)}ch` }}
-                className="bg-transparent text-5xl font-extrabold text-emerald-500 caret-emerald-500 outline-none placeholder:text-emerald-200"
+                className="min-w-0 max-w-full bg-transparent text-5xl font-extrabold text-emerald-500 caret-emerald-500 outline-none placeholder:text-emerald-200"
               />
             </div>
           </label>

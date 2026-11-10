@@ -55,3 +55,8 @@
 @media (max-height: 750px) { .auth-screen { padding-top: 24px; padding-bottom: 24px; gap: 24px; } .auth-body { gap: 16px; } }
 .auth-config .auth-ready { padding-top: 72px; }
 .auth-config .auth-ready h1 { font-size: 36px; font-weight: 800; line-height: 40px; letter-spacing: -.9px; }
+
+@media (min-width:1024px) {
+  .auth-shell { display:grid; place-items:center; padding:48px 24px; background:radial-gradient(ellipse at top left,#d1fae5,transparent 55%),var(--background); }
+  .auth-screen { max-width:520px; min-height:660px; padding:40px; border:1px solid var(--border); border-radius:28px; box-shadow:0 20px 60px #0f172a0a; }
+}
