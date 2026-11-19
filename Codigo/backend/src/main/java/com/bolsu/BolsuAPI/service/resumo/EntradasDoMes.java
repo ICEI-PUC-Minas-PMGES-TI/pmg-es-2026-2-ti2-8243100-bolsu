@@ -5,8 +5,9 @@ import java.util.Optional;
 
 /**
  * Fonte das entradas financeiras do usuário em um mês.
- * Quando o CRUD de entradas existir, basta expor um bean que implemente esta interface
- * anotado com {@code @Primary}: ele passa a valer no lugar de {@link EntradasDeclaradas}.
+ * A implementação atual é {@link EntradasPersistidas}, que soma as entradas registradas no mês e, na falta
+ * delas, recorre a {@link EntradasDeclaradas} (renda informada no cadastro). Para trocar a fonte, basta
+ * expor outro bean que implemente esta interface anotado com {@code @Primary}.
  */
 public interface EntradasDoMes {
 

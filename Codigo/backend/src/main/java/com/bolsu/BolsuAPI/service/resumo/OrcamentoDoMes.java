@@ -4,9 +4,9 @@ import java.time.YearMonth;
 import java.util.OptionalDouble;
 
 /**
- * Fonte do limite total de gastos do mês. Quando o orçamento persistido existir,
- * basta expor um bean que implemente esta interface anotado com {@code @Primary}:
- * ele passa a valer no lugar de {@link SemOrcamento}.
+ * Fonte do limite total de gastos do mês. A implementação atual é {@link OrcamentoPersistido}, que lê o
+ * limite que o usuário salvou. Para trocar a fonte, basta expor outro bean que implemente esta interface
+ * anotado com {@code @Primary}.
  */
 public interface OrcamentoDoMes {
 
