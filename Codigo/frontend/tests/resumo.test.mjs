@@ -1,6 +1,27 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
-import { deslocarMes, mesValido, percentual, textoVariacaoSemanal, tituloDoMes } from '../src/lib/resumo-mes.ts'
+import { deslocarMes, mesValido, percentual, reais, textoVariacaoSemanal, tituloDoMes } from '../src/lib/resumo-mes.ts'
+
+const semNbsp = texto => texto.replace(/ /g, ' ')
+
+test('reais formata em BRL com milhar e centavos', () => {
+  assert.equal(semNbsp(reais(1234.5)), 'R$ 1.234,50')
+  assert.equal(semNbsp(reais(0)), 'R$ 0,00')
+})
+test('reais mantém o sinal de saldo negativo', () => {
+  assert.match(semNbsp(reais(-30)), /^-R\$ 30,00$/)
+})
+test('deslocarMes com delta zero devolve o mesmo mês', () => {
+  assert.equal(deslocarMes('2026-11', 0), '2026-11')
+})
+test('tituloDoMes cobre janeiro e dezembro', () => {
+  assert.equal(tituloDoMes('2026-01'), 'Janeiro de 2026')
+  assert.equal(tituloDoMes('2026-12'), 'Dezembro de 2026')
+})
+test('textoVariacaoSemanal ignora valores não finitos', () => {
+  assert.equal(textoVariacaoSemanal(Number.NaN), '')
+  assert.equal(textoVariacaoSemanal(Number.POSITIVE_INFINITY), '')
+})
 
 test('deslocarMes atravessa virada de ano nos dois sentidos', () => {
   assert.equal(deslocarMes('2026-11', 1), '2026-12')
