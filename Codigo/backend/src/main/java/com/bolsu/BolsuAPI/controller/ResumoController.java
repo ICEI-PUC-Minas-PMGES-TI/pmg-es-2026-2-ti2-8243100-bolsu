@@ -51,12 +51,6 @@ public class ResumoController {
         }
     }
 
-    @ExceptionHandler(ResponseStatusException.class)
-    public ResponseEntity<Map<String, String>> erro(ResponseStatusException exception) {
-        return ResponseEntity.status(exception.getStatusCode())
-                .body(Map.of("message", exception.getReason() == null ? "Não foi possível concluir a solicitação" : exception.getReason()));
-    }
-
     @ExceptionHandler(DataAccessException.class)
     public ResponseEntity<Map<String, String>> bancoIndisponivel(DataAccessException exception) {
         log.error("Falha ao acessar o banco ao montar o resumo mensal", exception);

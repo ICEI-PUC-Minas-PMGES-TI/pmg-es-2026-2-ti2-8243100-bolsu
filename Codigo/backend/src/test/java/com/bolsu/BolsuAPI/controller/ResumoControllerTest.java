@@ -2,6 +2,7 @@ package com.bolsu.BolsuAPI.controller;
 
 import com.bolsu.BolsuAPI.configuration.ApplicationConfiguration;
 import com.bolsu.BolsuAPI.dto.ResumoMensalDTO;
+import com.bolsu.BolsuAPI.exception.GlobalExceptionHandler;
 import com.bolsu.BolsuAPI.repository.GastoRepository;
 import com.bolsu.BolsuAPI.repository.UsuarioRepository;
 import com.bolsu.BolsuAPI.security.JwtUtil;
@@ -125,7 +126,7 @@ class ResumoControllerTest {
 
     @Configuration
     @EnableWebMvc
-    @Import({ApplicationConfiguration.class, ResumoController.class})
+    @Import({ApplicationConfiguration.class, ResumoController.class, GlobalExceptionHandler.class})
     static class TestConfiguration {
         @Bean
         ResumoService resumoService() { return mock(ResumoService.class); }

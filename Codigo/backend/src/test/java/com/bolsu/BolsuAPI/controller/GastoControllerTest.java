@@ -2,6 +2,7 @@ package com.bolsu.BolsuAPI.controller;
 
 import com.bolsu.BolsuAPI.configuration.ApplicationConfiguration;
 import com.bolsu.BolsuAPI.dto.ResumoGastosDTO;
+import com.bolsu.BolsuAPI.exception.GlobalExceptionHandler;
 import com.bolsu.BolsuAPI.model.Gasto;
 import com.bolsu.BolsuAPI.repository.GastoRepository;
 import com.bolsu.BolsuAPI.repository.UsuarioRepository;
@@ -176,7 +177,8 @@ class GastoControllerTest {
         mvc.perform(post("/gastos").header(HttpHeaders.AUTHORIZATION, bearer)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"categoria\":\"\",\"valor\":-1}"))
-                .andExpect(status().isBadRequest());
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.message").value("Informe categoria e valor positivo"));
     }
 
     @Test
@@ -203,12 +205,33 @@ class GastoControllerTest {
                 .when(service).delete("g9", "usuario-1");
 
         mvc.perform(delete("/gastos/g9").header(HttpHeaders.AUTHORIZATION, bearer))
-                .andExpect(status().isNotFound());
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.message").value("Gasto nao encontrado"));
+    }
+
+    @Test
+    void bancoIndisponivelRetorna503ComMensagemAmigavel() throws Exception {
+        when(service.getAll("usuario-1"))
+                .thenThrow(new org.springframework.dao.DataAccessResourceFailureException("mongo fora"));
+
+        mvc.perform(get("/gastos").header(HttpHeaders.AUTHORIZATION, bearer))
+                .andExpect(status().isServiceUnavailable())
+                .andExpect(jsonPath("$.message").value("Serviço temporariamente indisponível. Tente novamente em instantes."));
+    }
+
+    @Test
+    void erroSemMotivoUsaMensagemPadrao() throws Exception {
+        doThrow(new ResponseStatusException(HttpStatus.CONFLICT))
+                .when(service).delete("g1", "usuario-1");
+
+        mvc.perform(delete("/gastos/g1").header(HttpHeaders.AUTHORIZATION, bearer))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.message").value("Não foi possível concluir a solicitação"));
     }
 
     @Configuration
     @EnableWebMvc
-    @Import({ApplicationConfiguration.class, GastoController.class})
+    @Import({ApplicationConfiguration.class, GastoController.class, GlobalExceptionHandler.class})
     static class TestConfiguration {
         @Bean
         GastoService gastoService() { return mock(GastoService.class); }
