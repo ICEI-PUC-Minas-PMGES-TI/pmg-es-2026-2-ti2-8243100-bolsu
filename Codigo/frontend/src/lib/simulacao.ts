@@ -20,3 +20,24 @@ export function mesAtual() {
   }).formatToParts(new Date())
   return `${partes.find(p => p.type === 'year')!.value}-${partes.find(p => p.type === 'month')!.value}`
 }
+
+/** Valores usados quando o usuário ainda não escolheu nada: R$ 20 por mês, formatura daqui a 2 anos. */
+export const VALOR_PADRAO_CENTAVOS = 2000
+export const ANOS_PADRAO_ATE_FORMATURA = 2
+/** Referência de preço para traduzir a economia em almoços no RU. */
+export const PRECO_ALMOCO_RU_CENTAVOS = 1000
+
+/** Mês de formatura sugerido (mesmo mês, {@link ANOS_PADRAO_ATE_FORMATURA} anos depois), no formato AAAA-MM. */
+export function mesPadraoDeFormatura(inicio: string): string {
+  return `${Number(inicio.slice(0, 4)) + ANOS_PADRAO_ATE_FORMATURA}-${inicio.slice(5, 7)}`
+}
+
+/**
+ * Projeção de guardar `mensal` centavos por mês de `inicio` até `fim` (AAAA-MM), contando os dois meses.
+ * Valor mensal inválido ou período vazio resultam em zero.
+ */
+export function projecao(mensal: number, inicio: string, fim: string) {
+  const meses = mesesEntre(inicio, fim)
+  const total = mensal > 0 ? mensal * meses : 0
+  return { meses, total, almocos: Math.floor(total / PRECO_ALMOCO_RU_CENTAVOS) }
+}
