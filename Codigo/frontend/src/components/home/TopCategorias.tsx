@@ -21,13 +21,13 @@ export function TopCategorias({ categorias }: { categorias: ResumoMensal['catego
           </Link>
         </>
       ) : (
-        <ul className="space-y-3">
+        <ul className="space-y-3" aria-label="Categorias com maior despesa no mês">
           {principais.map(c => (
             <li key={c.nome}>
               <div className="flex justify-between text-sm font-semibold text-foreground">
                 <span>{c.nome}</span><span>{reais(c.valor)}</span>
               </div>
-              <div className="mt-1.5 h-2 w-full overflow-hidden rounded-full bg-muted">
+              <div className="mt-1.5 h-2 w-full overflow-hidden rounded-full bg-muted" aria-hidden="true">
                 <div className="h-full rounded-full bg-primary" style={{ width: `${percentual(c.valor, maiorCategoria)}%` }} />
               </div>
             </li>

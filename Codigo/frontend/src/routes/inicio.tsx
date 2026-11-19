@@ -28,11 +28,11 @@ function Dashboard() {
       <header className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold tracking-tight text-foreground">
-            Oi, {nome} 👋
+            Oi, {nome} <span aria-hidden="true">👋</span>
           </h1>
           <p className="text-sm font-medium text-muted-foreground">Sua visão geral do mês</p>
         </div>
-        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10 text-primary font-bold text-lg">
+        <div aria-hidden="true" className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10 text-primary font-bold text-lg">
           {nome.charAt(0)}
         </div>
       </header>

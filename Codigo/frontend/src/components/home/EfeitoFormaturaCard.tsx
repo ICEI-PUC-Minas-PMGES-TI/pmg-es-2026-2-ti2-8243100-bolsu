@@ -13,19 +13,19 @@ export function EfeitoFormaturaCard({ inicio }: { inicio: string }) {
 
   return (
     <div
-      className="relative overflow-hidden rounded-3xl bg-linear-to-br from-indigo-500 to-purple-600 p-5 text-white shadow-sm"
+      className="relative overflow-hidden rounded-3xl bg-linear-to-br from-indigo-600 to-purple-600 p-5 text-white shadow-sm"
     >
-      <div className="absolute -right-4 -top-4 opacity-20">
+      <div className="absolute -right-4 -top-4 opacity-20" aria-hidden="true">
         <GraduationCap size={100} />
       </div>
       <div className="relative z-10">
         <span className="mb-2 inline-block rounded-full bg-white/20 px-2.5 py-1 text-xs font-bold backdrop-blur-md">
-          Efeito Formatura 🎓
+          Efeito Formatura <span aria-hidden="true">🎓</span>
         </span>
         <h3 className="text-lg font-bold mb-1 leading-tight">
           E se você guardasse {dinheiro(VALOR_PADRAO_CENTAVOS)} por mês?
         </h3>
-        <p className="text-indigo-100 text-sm font-medium mb-4">
+        <p className="text-white text-sm font-medium mb-4">
           {dinheiro(VALOR_PADRAO_CENTAVOS)}/mês ➔ <span className="text-white font-bold">{dinheiro(total)}</span> até a formatura
         </p>
         <div className="mb-4 rounded-xl bg-black/20 p-3 backdrop-blur-sm">
