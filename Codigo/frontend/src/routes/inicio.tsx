@@ -59,7 +59,7 @@ function Dashboard() {
 
       <div>
         <Link
-          to={"/missoes" as any}
+          to="/missoes"
           className="flex w-full items-center gap-3 rounded-3xl bg-card border border-border p-5 shadow-sm"
         >
           <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-warning/15 text-warning"><Target size={22} /></span>
@@ -93,7 +93,7 @@ function Dashboard() {
             </p>
           </div>
           <Link
-            to={"/efeito-formatura" as any}
+            to="/efeito-formatura"
             className="w-full inline-block text-center rounded-xl bg-white py-2.5 text-sm font-bold text-indigo-600 shadow-sm transition-transform active:scale-95"
           >
             Simular meu futuro
@@ -168,7 +168,7 @@ function Resumo({ dados, mesAtual }: { dados: ResumoMensal; mesAtual: boolean })
             <Indicador cor={dados.orcamento.restante < 0 ? 'bg-red-500' : 'bg-blue-500'} titulo="Orçamento restante"
               valor={reais(dados.orcamento.restante)} />
           ) : (
-            <Link to={"/orcamento" as any} className="flex flex-1 flex-col rounded-2xl bg-card border border-dashed border-border p-3 shadow-sm">
+            <Link to="/orcamento" className="flex flex-1 flex-col rounded-2xl bg-card border border-dashed border-border p-3 shadow-sm">
               <div className="mb-2 h-3 w-3 rounded-full bg-blue-500" />
               <span className="text-xs font-medium text-muted-foreground">Orçamento</span>
               <span className="text-sm font-bold mt-1 text-foreground leading-tight">Defina seus limites</span>
@@ -182,7 +182,7 @@ function Resumo({ dados, mesAtual }: { dados: ResumoMensal; mesAtual: boolean })
         {principais.length === 0 ? (
           <>
             <p className="text-sm text-muted-foreground mb-4">Nenhum gasto registrado neste mês.</p>
-            <Link to={"/cadastro-gasto" as any}
+            <Link to="/cadastro-gasto"
               className="flex w-full items-center justify-center rounded-xl bg-muted py-2.5 text-sm font-semibold text-foreground">
               Registrar um gasto
             </Link>
