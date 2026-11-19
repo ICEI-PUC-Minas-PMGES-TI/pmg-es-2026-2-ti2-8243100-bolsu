@@ -16,6 +16,8 @@ import java.util.stream.Collectors;
 @Service
 public class GastoService {
 
+    private static final String CATEGORIA_PADRAO = "Outros";
+
     @Autowired
     private GastoRepository gastoRepository;
 
@@ -49,7 +51,7 @@ public class GastoService {
         List<Gasto> gastos = gastoRepository.findByUsuarioIdAndDataGreaterThanEqualAndDataLessThanEqual(usuarioId, hoje.minusDays(dias - 1), hoje);
 
         Map<String, Double> porCategoria = gastos.stream()
-                .collect(Collectors.groupingBy(Gasto::getCategoria, Collectors.summingDouble(Gasto::getValor)));
+                .collect(Collectors.groupingBy(GastoService::categoriaOuPadrao, Collectors.summingDouble(Gasto::getValor)));
 
         List<ResumoGastosDTO.CategoriaTotal> categorias = porCategoria.entrySet().stream()
                 .map(e -> new ResumoGastosDTO.CategoriaTotal(e.getKey(), e.getValue()))
@@ -57,5 +59,11 @@ public class GastoService {
 
         double total = categorias.stream().mapToDouble(ResumoGastosDTO.CategoriaTotal::valor).sum();
         return new ResumoGastosDTO(total, categorias);
+    }
+
+    /** Gastos antigos podem não ter categoria; eles são agrupados em "Outros" em vez de quebrar o resumo. */
+    private static String categoriaOuPadrao(Gasto gasto) {
+        String categoria = gasto.getCategoria();
+        return categoria == null || categoria.isBlank() ? CATEGORIA_PADRAO : categoria;
     }
 }

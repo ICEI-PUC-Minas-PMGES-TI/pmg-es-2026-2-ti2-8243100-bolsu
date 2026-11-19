@@ -188,6 +188,20 @@ class GastoServiceTest {
     }
 
     @Test
+    void categoriaAusenteNoResumoVaiParaOutrosEmVezDeQuebrar() {
+        when(repository.findByUsuarioIdAndDataGreaterThanEqualAndDataLessThanEqual(eq(USUARIO), any(), any()))
+                .thenReturn(List.of(gasto(null, 10), gasto("  ", 5), gasto("Lazer", 20)));
+
+        ResumoGastosDTO resumo = service.resumo("mes", USUARIO);
+
+        assertThat(resumo.total()).isEqualTo(35.0);
+        assertThat(resumo.categorias())
+                .filteredOn(c -> c.nome().equals("Outros"))
+                .singleElement()
+                .satisfies(c -> assertThat(c.valor()).isEqualTo(15.0));
+    }
+
+    @Test
     void semGastosRetornaTotalZeroECategoriasVazias() {
         when(repository.findByUsuarioIdAndDataGreaterThanEqualAndDataLessThanEqual(eq(USUARIO), any(), any()))
                 .thenReturn(List.of());
