@@ -60,7 +60,7 @@ function Dashboard() {
       )}
 
       <MissoesLink />
-      <EfeitoFormaturaCard />
+      <EfeitoFormaturaCard inicio={atual} />
     </div>
   )
 }

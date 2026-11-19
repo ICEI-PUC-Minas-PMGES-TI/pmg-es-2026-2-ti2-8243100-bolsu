@@ -1,8 +1,16 @@
 import { Link } from '@tanstack/react-router'
 import { GraduationCap } from 'lucide-react'
+import { VALOR_PADRAO_CENTAVOS, dinheiro, mesPadraoDeFormatura, projecao } from '../../lib/simulacao'
 
-/** Chamada para a simulação do Efeito Formatura. */
-export function EfeitoFormaturaCard() {
+/**
+ * Chamada para a simulação do Efeito Formatura. Usa a mesma simulação padrão da tela
+ * (valor e prazo iniciais), então os números do card batem com os que o usuário vê ao abri-la.
+ *
+ * @param inicio mês atual, no formato AAAA-MM
+ */
+export function EfeitoFormaturaCard({ inicio }: { inicio: string }) {
+  const { total, almocos } = projecao(VALOR_PADRAO_CENTAVOS, inicio, mesPadraoDeFormatura(inicio))
+
   return (
     <div
       className="relative overflow-hidden rounded-3xl bg-linear-to-br from-indigo-500 to-purple-600 p-5 text-white shadow-sm"
@@ -15,14 +23,14 @@ export function EfeitoFormaturaCard() {
           Efeito Formatura 🎓
         </span>
         <h3 className="text-lg font-bold mb-1 leading-tight">
-          E se você guardasse R$ 20 por mês?
+          E se você guardasse {dinheiro(VALOR_PADRAO_CENTAVOS)} por mês?
         </h3>
         <p className="text-indigo-100 text-sm font-medium mb-4">
-          R$ 20/mês ➔ <span className="text-white font-bold">R$ 720</span> até a formatura
+          {dinheiro(VALOR_PADRAO_CENTAVOS)}/mês ➔ <span className="text-white font-bold">{dinheiro(total)}</span> até a formatura
         </p>
         <div className="mb-4 rounded-xl bg-black/20 p-3 backdrop-blur-sm">
           <p className="text-xs font-medium">
-            Isso pode pagar cerca de 72 almoços no RU.
+            Isso pode pagar cerca de {almocos} almoços no RU.
           </p>
         </div>
         <Link
