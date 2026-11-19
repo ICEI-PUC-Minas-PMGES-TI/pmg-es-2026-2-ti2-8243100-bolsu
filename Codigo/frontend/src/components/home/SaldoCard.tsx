@@ -9,12 +9,12 @@ export function SaldoCard({ dados, mesAtual }: { dados: ResumoMensal; mesAtual: 
 
   return (
     <div
-      className="relative overflow-hidden rounded-[28px] bg-emerald-700 p-6 text-primary-foreground shadow-lg shadow-emerald-700/30"
+      className="relative overflow-hidden rounded-[28px] bg-emerald-700 p-6 text-primary-foreground lg:p-8 shadow-lg shadow-emerald-700/30"
     >
       <p className="text-sm font-medium text-primary-foreground/90 mb-1">
         {negativo ? 'Saldo do mês' : 'Dinheiro disponível'}
       </p>
-      <h2 className="text-4xl font-extrabold tracking-tighter mb-1">{reais(dados.saldo)}</h2>
+      <h2 className="text-4xl font-extrabold tracking-tighter mb-1 lg:text-5xl">{reais(dados.saldo)}</h2>
       {mesAtual && dados.diasRestantes > 0 && (
         <p className="text-sm font-medium text-primary-foreground/90 mb-4">
           para os próximos {dados.diasRestantes} {dados.diasRestantes === 1 ? 'dia' : 'dias'}
