@@ -7,7 +7,6 @@ import com.bolsu.BolsuAPI.model.Gasto;
 import com.bolsu.BolsuAPI.repository.GastoRepository;
 import com.bolsu.BolsuAPI.service.resumo.EntradasDoMes;
 import com.bolsu.BolsuAPI.service.resumo.OrcamentoDoMes;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
@@ -15,7 +14,6 @@ import java.math.RoundingMode;
 import java.time.Clock;
 import java.time.LocalDate;
 import java.time.YearMonth;
-import java.time.ZoneId;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
@@ -24,7 +22,6 @@ import java.util.stream.Collectors;
 @Service
 public class ResumoService {
 
-    private static final ZoneId ZONA = ZoneId.of("America/Sao_Paulo");
     private static final String CATEGORIA_PADRAO = "Outros";
 
     private final GastoRepository gastoRepository;
@@ -32,12 +29,7 @@ public class ResumoService {
     private final OrcamentoDoMes orcamentoDoMes;
     private final Clock clock;
 
-    @Autowired
-    public ResumoService(GastoRepository gastoRepository, EntradasDoMes entradasDoMes, OrcamentoDoMes orcamentoDoMes) {
-        this(gastoRepository, entradasDoMes, orcamentoDoMes, Clock.system(ZONA));
-    }
-
-    ResumoService(GastoRepository gastoRepository, EntradasDoMes entradasDoMes, OrcamentoDoMes orcamentoDoMes, Clock clock) {
+    public ResumoService(GastoRepository gastoRepository, EntradasDoMes entradasDoMes, OrcamentoDoMes orcamentoDoMes, Clock clock) {
         this.gastoRepository = gastoRepository;
         this.entradasDoMes = entradasDoMes;
         this.orcamentoDoMes = orcamentoDoMes;

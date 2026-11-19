@@ -10,7 +10,10 @@ import org.springframework.http.HttpStatus;
 import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.time.Clock;
+import java.time.Instant;
 import java.time.LocalDate;
+import java.time.ZoneId;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -26,6 +29,11 @@ class GastoServiceTest {
 
     private static final String USUARIO = "usuario-1";
 
+    private static final ZoneId SAO_PAULO = ZoneId.of("America/Sao_Paulo");
+    // Hoje: 2026-11-08, ao meio-dia em São Paulo.
+    private static final LocalDate HOJE = LocalDate.of(2026, 11, 8);
+    private static final Clock RELOGIO = Clock.fixed(HOJE.atTime(12, 0).atZone(SAO_PAULO).toInstant(), SAO_PAULO);
+
     private GastoRepository repository;
     private GastoService service;
 
@@ -34,6 +42,7 @@ class GastoServiceTest {
         repository = mock(GastoRepository.class);
         service = new GastoService();
         ReflectionTestUtils.setField(service, "gastoRepository", repository);
+        ReflectionTestUtils.setField(service, "clock", RELOGIO);
     }
 
     private static Gasto gasto(String categoria, double valor) {
@@ -144,32 +153,45 @@ class GastoServiceTest {
 
     @Test
     void semanaCobreOsUltimos7DiasContandoHoje() {
-        LocalDate hoje = LocalDate.now();
-        assertThat(inicioConsultado("semana").getValue()).isEqualTo(hoje.minusDays(6));
+        assertThat(inicioConsultado("semana").getValue()).isEqualTo(HOJE.minusDays(6));
     }
 
     @Test
     void mesCobreOsUltimos30Dias() {
-        LocalDate hoje = LocalDate.now();
-        assertThat(inicioConsultado("mes").getValue()).isEqualTo(hoje.minusDays(29));
+        assertThat(inicioConsultado("mes").getValue()).isEqualTo(HOJE.minusDays(29));
     }
 
     @Test
     void semestreCobreOsUltimos180Dias() {
-        LocalDate hoje = LocalDate.now();
-        assertThat(inicioConsultado("semestre").getValue()).isEqualTo(hoje.minusDays(179));
+        assertThat(inicioConsultado("semestre").getValue()).isEqualTo(HOJE.minusDays(179));
     }
 
     @Test
     void periodoDesconhecidoUsaMes() {
-        LocalDate hoje = LocalDate.now();
-        assertThat(inicioConsultado("qualquer").getValue()).isEqualTo(hoje.minusDays(29));
+        assertThat(inicioConsultado("qualquer").getValue()).isEqualTo(HOJE.minusDays(29));
     }
 
     @Test
     void periodoEhCaseInsensitive() {
-        LocalDate hoje = LocalDate.now();
-        assertThat(inicioConsultado("SEMANA").getValue()).isEqualTo(hoje.minusDays(6));
+        assertThat(inicioConsultado("SEMANA").getValue()).isEqualTo(HOJE.minusDays(6));
+    }
+
+    @Test
+    void fimDaJanelaEHojeNoFusoDeSaoPauloEmVezDeUtc() {
+        // 08/11 22:30 em São Paulo já é 09/11 em UTC; "hoje" continua sendo 08/11.
+        Instant instante = HOJE.atTime(22, 30).atZone(SAO_PAULO).toInstant();
+        ReflectionTestUtils.setField(service, "clock", Clock.fixed(instante, SAO_PAULO));
+        ArgumentCaptor<LocalDate> inicio = ArgumentCaptor.forClass(LocalDate.class);
+        ArgumentCaptor<LocalDate> fim = ArgumentCaptor.forClass(LocalDate.class);
+        when(repository.findByUsuarioIdAndDataGreaterThanEqualAndDataLessThanEqual(eq(USUARIO), any(), any()))
+                .thenReturn(List.of());
+
+        service.resumo("semana", USUARIO);
+
+        verify(repository).findByUsuarioIdAndDataGreaterThanEqualAndDataLessThanEqual(
+                eq(USUARIO), inicio.capture(), fim.capture());
+        assertThat(fim.getValue()).isEqualTo(HOJE);
+        assertThat(inicio.getValue()).isEqualTo(HOJE.minusDays(6));
     }
 
     @Test
