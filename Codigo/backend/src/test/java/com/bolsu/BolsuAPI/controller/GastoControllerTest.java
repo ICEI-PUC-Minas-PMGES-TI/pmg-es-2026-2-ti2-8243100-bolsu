@@ -176,9 +176,76 @@ class GastoControllerTest {
 
         mvc.perform(post("/gastos").header(HttpHeaders.AUTHORIZATION, bearer)
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"categoria\":\"\",\"valor\":-1}"))
+                        .content("{\"categoria\":\"Lazer\",\"valor\":10}"))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.message").value("Informe categoria e valor positivo"));
+    }
+
+    // ---- validação do corpo (Bean Validation)
+
+    private void postarInvalido(String corpo, String mensagemEsperada) throws Exception {
+        mvc.perform(post("/gastos").header(HttpHeaders.AUTHORIZATION, bearer)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(corpo))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.message").value(mensagemEsperada));
+        verify(service, never()).add(any(), any());
+    }
+
+    @Test
+    void recusaCategoriaEmBrancoOuAusente() throws Exception {
+        postarInvalido("{\"categoria\":\"  \",\"valor\":10}", "Informe a categoria do gasto");
+        postarInvalido("{\"valor\":10}", "Informe a categoria do gasto");
+    }
+
+    @Test
+    void recusaValorZeroNegativoOuAusente() throws Exception {
+        postarInvalido("{\"categoria\":\"Lazer\",\"valor\":0}", "O valor do gasto deve ser maior que zero");
+        postarInvalido("{\"categoria\":\"Lazer\",\"valor\":-5}", "O valor do gasto deve ser maior que zero");
+    }
+
+    @Test
+    void recusaValorAusenteComMensagemUtil() throws Exception {
+        postarInvalido("{\"categoria\":\"Lazer\"}", "Os dados enviados estão incompletos ou em formato inválido");
+        postarInvalido("{\"categoria\":\"Lazer\",\"valor\":\"dez\"}",
+                "Os dados enviados estão incompletos ou em formato inválido");
+    }
+
+    @Test
+    void recusaValorAbsurdamenteAlto() throws Exception {
+        postarInvalido("{\"categoria\":\"Lazer\",\"valor\":1000000000000}", "O valor do gasto é alto demais");
+    }
+
+    @Test
+    void recusaDataNoFuturo() throws Exception {
+        String futuro = LocalDate.now().plusDays(2).toString();
+        postarInvalido("{\"categoria\":\"Lazer\",\"valor\":10,\"data\":\"" + futuro + "\"}",
+                "A data do gasto não pode estar no futuro");
+    }
+
+    @Test
+    void recusaCategoriaEObservacaoLongasDemais() throws Exception {
+        postarInvalido("{\"categoria\":\"" + "a".repeat(51) + "\",\"valor\":10}",
+                "A categoria deve ter no máximo 50 caracteres");
+        postarInvalido("{\"categoria\":\"Lazer\",\"valor\":10,\"descricao\":\"" + "a".repeat(201) + "\"}",
+                "A observação deve ter no máximo 200 caracteres");
+    }
+
+    @Test
+    void reuneAsMensagensQuandoHaMaisDeUmErro() throws Exception {
+        postarInvalido("{\"categoria\":\"\",\"valor\":0}",
+                "Informe a categoria do gasto; O valor do gasto deve ser maior que zero");
+    }
+
+    @Test
+    void aceitaObservacaoVaziaEDataDeHoje() throws Exception {
+        when(service.add(any(), any())).thenAnswer(i -> i.getArgument(0));
+
+        mvc.perform(post("/gastos").header(HttpHeaders.AUTHORIZATION, bearer)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"categoria\":\"Lazer\",\"valor\":10,\"descricao\":\"\",\"data\":\""
+                                + LocalDate.now() + "\"}"))
+                .andExpect(status().isOk());
     }
 
     @Test
@@ -186,7 +253,8 @@ class GastoControllerTest {
         mvc.perform(post("/gastos").header(HttpHeaders.AUTHORIZATION, bearer)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{categoria: "))
-                .andExpect(status().isBadRequest());
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.message").value("Os dados enviados estão incompletos ou em formato inválido"));
         verify(service, never()).add(any(), any());
     }
 
