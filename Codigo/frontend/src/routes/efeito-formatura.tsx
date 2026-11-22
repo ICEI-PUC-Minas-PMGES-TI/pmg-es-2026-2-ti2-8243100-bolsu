@@ -2,7 +2,9 @@ import { useState } from 'react'
 import { createFileRoute, Link } from '@tanstack/react-router'
 import { GraduationCap, PiggyBank, Plane, UtensilsCrossed, X, ArrowRight } from 'lucide-react'
 import { BolsuLayout } from '../components/bolsu-layout'
-import { centavos, dinheiro, mesesEntre, mesAtual } from '../lib/simulacao'
+import {
+  PRECO_ALMOCO_RU_CENTAVOS, VALOR_PADRAO_CENTAVOS, centavos, dinheiro, mesAtual, mesPadraoDeFormatura, mesesEntre,
+} from '../lib/simulacao'
 
 export const Route = createFileRoute('/efeito-formatura')({
   component: FormaturaPage,
@@ -12,8 +14,8 @@ export const Route = createFileRoute('/efeito-formatura')({
 
 function FormaturaPage() {
   const { inicio } = Route.useLoaderData()
-  const [valor, setValor] = useState('20')
-  const [mes, setMes] = useState(`${Number(inicio.slice(0, 4)) + 2}-${inicio.slice(5, 7)}`)
+  const [valor, setValor] = useState(String(VALOR_PADRAO_CENTAVOS / 100))
+  const [mes, setMes] = useState(mesPadraoDeFormatura(inicio))
   const mensal = centavos(valor)
   const maxMes = `${Number(inicio.slice(0, 4)) + 15}-${inicio.slice(5, 7)}`
   const meses = mesesEntre(inicio, mes)
@@ -35,7 +37,7 @@ function FormaturaPage() {
         <p>Na formatura, você pode ter:</p><strong className="projected-total" aria-live="polite">{dinheiro(total)}</strong>
         <p className="projection-caption">{valido ? `${meses} aportes de ${dinheiro(mensal)}, incluindo este mês e o mês da formatura.` : 'Preencha os campos para simular.'}</p>
         <svg className="projection-chart" viewBox="0 0 320 135" role="img" aria-label="Crescimento linear da economia, sem rendimentos"><defs><linearGradient id="savings-fill" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stopColor="white" stopOpacity=".45" /><stop offset="100%" stopColor="white" stopOpacity="0" /></linearGradient></defs><path d="M4 124 L316 14 L316 135 L4 135 Z" fill="url(#savings-fill)" /><path d="M4 124 L316 14" fill="none" stroke="white" strokeWidth="3" /></svg>
-        <div className="equivalence"><span><UtensilsCrossed size={20} /></span><p>Aproximadamente <strong>{Math.floor(total / 1000)} almoços no RU</strong></p></div>
+        <div className="equivalence"><span><UtensilsCrossed size={20} /></span><p>Aproximadamente <strong>{Math.floor(total / PRECO_ALMOCO_RU_CENTAVOS)} almoços no RU</strong></p></div>
         <div className="equivalence"><span><Plane size={20} /></span><p>Uma parte da sua viagem</p></div>
         <div className="equivalence"><span><PiggyBank size={20} /></span><p>Início da reserva de emergência</p></div>
       </section>
