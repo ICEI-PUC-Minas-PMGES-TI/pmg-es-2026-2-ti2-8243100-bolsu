@@ -1,6 +1,5 @@
-import { useQueryClient } from '@tanstack/react-query'
-import { apiJson } from '../lib/api'
 import { useState } from 'react'
+import { useQueryClient } from '@tanstack/react-query'
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import {
   BookOpen,
@@ -11,9 +10,10 @@ import {
   Printer,
   Smartphone,
   Utensils,
-  X,
   type LucideIcon,
 } from 'lucide-react'
+import { apiJson } from '../lib/api'
+import '@/styles.css'
 
 export const Route = createFileRoute('/cadastro-gasto')({ component: CadastroGasto })
 
@@ -36,24 +36,33 @@ const CATEGORIAS: Categoria[] = [
   { id: 8, nome: 'Moradia', cor: '#4f46e5', fundo: '#e0e7ff', icone: Home },
 ]
 
+type Modo = 'gasto' | 'entrada'
+
+function hoje() {
+  const now = new Date()
+  return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`
+}
+
 function CadastroGasto() {
   const navigate = useNavigate()
   const cache = useQueryClient()
+  const [modo, setModo] = useState<Modo>('gasto')
   const [pending, setPending] = useState(false)
   const [error, setError] = useState('')
   const [centavos, setCentavos] = useState(0)
   const [categoriaId, setCategoriaId] = useState<number | null>(null)
   const [observacao, setObservacao] = useState('')
 
+  const ehGasto = modo === 'gasto'
   const valor = centavos / 100
-  const podeRegistrar = valor > 0 && categoriaId !== null
+  const podeRegistrar = valor > 0 && (!ehGasto || categoriaId !== null)
 
   const valorTexto =
     centavos > 0
       ? valor.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
       : ''
 
-  //(máx. 8 digitos)
+  // (máx. 8 dígitos)
   function aoDigitarValor(texto: string) {
     const digitos = texto.replace(/\D/g, '').slice(0, 8)
     setCentavos(Number(digitos))
@@ -64,118 +73,147 @@ function CadastroGasto() {
     setPending(true)
     setError('')
     try {
-      const now = new Date()
-      const data = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`
-      await apiJson('/gastos', {
-        method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ categoria: CATEGORIAS.find(c => c.id === categoriaId)?.nome, valor, descricao: observacao.trim(), data }),
-      })
+      const headers = { 'Content-Type': 'application/json' }
+      if (ehGasto) {
+        await apiJson('/gastos', {
+          method: 'POST',
+          headers,
+          body: JSON.stringify({
+            categoria: CATEGORIAS.find((c) => c.id === categoriaId)?.nome,
+            valor,
+            descricao: observacao.trim(),
+            data: hoje(),
+          }),
+        })
+      } else {
+        await apiJson('/entradas', {
+          method: 'POST',
+          headers,
+          body: JSON.stringify({ descricao: observacao.trim() || 'Entrada', valor, data: hoje() }),
+        })
+      }
+      // Chaves que começam com 'gastos' (lista, resumo, orçamento) são atualizadas juntas.
       await cache.invalidateQueries({ queryKey: ['gastos'] })
       await navigate({ to: '/gastos' })
-    } catch (reason) { setError(reason instanceof Error ? reason.message : 'Não foi possível salvar o gasto.') }
-    finally { setPending(false) }
+    } catch (reason) {
+      setError(reason instanceof Error ? reason.message : 'Não foi possível salvar.')
+    } finally {
+      setPending(false)
+    }
   }
 
   return (
-    <div className="min-h-screen bg-[#f6f9f7] text-slate-900" style={{ fontFamily: 'Manrope, sans-serif' }}>
-      <div className="mx-auto flex min-h-screen w-full max-w-md flex-col">
-        <main className="flex-1 space-y-8 px-5 pt-8">
-          {/* Cabeçalho */}
-          <header className="flex items-center justify-between">
-            <h1 className="text-[22px] font-extrabold">Onde foi essa grana?</h1>
-            <button
-              aria-label="Fechar"
-              onClick={() => navigate({ to: '/gastos' })}
-              className="flex h-10 w-10 items-center justify-center rounded-full bg-slate-100 text-slate-500 hover:bg-slate-200"
-            >
-              <X size={20} />
-            </button>
-          </header>
+    <div className="mx-auto flex w-full max-w-xl flex-col gap-6 p-6 pb-28 pt-10 lg:max-w-6xl">
+      <header>
+        <h1 className="text-2xl font-bold tracking-tight text-foreground">
+          {ehGasto ? 'Onde foi essa grana?' : 'De onde veio essa grana?'}
+        </h1>
+      </header>
 
-          {/* Valor do gasto */}
-          <label className="block cursor-text rounded-3xl border border-emerald-100 bg-emerald-50 px-4 py-8 text-center focus-within:border-emerald-400">
-            <span className="text-sm font-bold tracking-wide text-emerald-500">VALOR DO GASTO</span>
-            <div className="mt-3 flex items-center justify-center gap-2">
-              <span
-                className={`text-5xl font-extrabold ${
-                  valor > 0 ? 'text-emerald-500' : 'text-emerald-300'
-                }`}
-              >
-                R$
-              </span>
-              <input
-                autoFocus
-                type="text"
-                inputMode="numeric"
-                aria-label="Valor do gasto"
-                placeholder="0,00"
-                value={valorTexto}
-                onChange={(e) => aoDigitarValor(e.target.value)}
-                style={{ width: `${Math.max(valorTexto.length, 4)}ch` }}
-                className="bg-transparent text-5xl font-extrabold text-emerald-500 caret-emerald-500 outline-none placeholder:text-emerald-200"
-              />
-            </div>
-          </label>
-
-          {/* Categorias */}
-          <section>
-            <h2 className="mb-3 text-lg font-extrabold">Com o que você gastou?</h2>
-            <div className="grid grid-cols-4 gap-2.5">
-              {CATEGORIAS.map(({ id, nome, cor, fundo, icone: Icone }) => {
-                const selecionada = id === categoriaId
-                return (
-                  <button
-                    key={id}
-                    type="button"
-                    onClick={() => setCategoriaId(id)}
-                    aria-pressed={selecionada}
-                    className={`flex flex-col items-center gap-2 rounded-2xl bg-white px-1 py-3 shadow-[0_2px_8px_rgba(15,23,42,0.08)] transition-all ${
-                      selecionada ? 'ring-2 ring-emerald-500' : 'ring-1 ring-slate-100'
-                    }`}
-                  >
-                    <span
-                      className="flex h-11 w-11 items-center justify-center rounded-full"
-                      style={{ backgroundColor: fundo, color: cor }}
-                    >
-                      <Icone size={20} />
-                    </span>
-                    <span className="min-h-[28px] text-center text-[11px] font-bold leading-tight">
-                      {nome}
-                    </span>
-                  </button>
-                )
-              })}
-            </div>
-          </section>
-
-          {/* Observação */}
-          <section>
-            <h2 className="mb-3 text-lg font-extrabold">Quer adicionar uma observação?</h2>
-            <input
-              type="text"
-              value={observacao}
-              onChange={(e) => setObservacao(e.target.value)}
-              placeholder="Ex: Lanche depois da aula"
-              className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3.5 text-sm outline-none focus:border-emerald-400"
-            />
-          </section>
-        </main>
-
-        {/* Botão */}
-        <footer className="border-t border-slate-200 px-5 py-4">
-          {error && <p role="alert" className="mb-3 text-red-600">{error}</p>}
+      <div className="flex flex-col gap-6 lg:grid lg:grid-cols-[400px_1fr] lg:items-start lg:gap-8">
+      <div className="flex flex-col gap-6">
+      {/* Gasto / Entrada */}
+      <div className="grid grid-cols-2 gap-1 rounded-2xl bg-muted p-1" role="tablist">
+        {(['gasto', 'entrada'] as Modo[]).map((m) => (
           <button
-            onClick={registrar}
-            disabled={!podeRegistrar || pending}
-            className={`w-full rounded-2xl py-4 text-lg font-extrabold text-white transition-all ${
-              podeRegistrar
-                ? 'bg-emerald-500 shadow-lg shadow-emerald-500/40 active:scale-[0.98]'
-                : 'cursor-not-allowed bg-emerald-300'
+            key={m}
+            type="button"
+            role="tab"
+            aria-selected={modo === m}
+            onClick={() => {
+              setModo(m)
+              setError('')
+            }}
+            className={`rounded-xl py-2.5 text-sm font-bold transition-all ${
+              modo === m ? 'bg-card text-foreground shadow-sm' : 'text-muted-foreground'
             }`}
           >
-            Registrar gasto
+            {m === 'gasto' ? 'Gasto' : 'Entrada'}
           </button>
-        </footer>
+        ))}
+      </div>
+
+      {/* Valor */}
+      <label className="block cursor-text rounded-3xl border border-primary/20 bg-primary/10 px-4 py-8 text-center focus-within:border-primary">
+        <span className="text-sm font-bold tracking-wide text-primary">
+          {ehGasto ? 'VALOR DO GASTO' : 'VALOR DA ENTRADA'}
+        </span>
+        <div className="mt-3 flex items-center justify-center gap-2">
+          <span className={`text-5xl font-extrabold ${valor > 0 ? 'text-primary' : 'text-primary/40'}`}>R$</span>
+          <input
+            autoFocus
+            type="text"
+            inputMode="numeric"
+            aria-label={ehGasto ? 'Valor do gasto' : 'Valor da entrada'}
+            placeholder="0,00"
+            value={valorTexto}
+            onChange={(e) => aoDigitarValor(e.target.value)}
+            style={{ width: `${Math.max(valorTexto.length, 4)}ch` }}
+            className="bg-transparent text-5xl font-extrabold text-primary caret-primary outline-none placeholder:text-primary/30"
+          />
+        </div>
+      </label>
+
+      </div>
+
+      <div className="flex flex-col gap-6">
+      {/* Categorias (só para gasto) */}
+      {ehGasto && (
+        <section>
+          <h2 className="mb-3 text-lg font-bold text-foreground">Com o que você gastou?</h2>
+          <div className="grid grid-cols-4 gap-2.5">
+            {CATEGORIAS.map(({ id, nome, cor, fundo, icone: Icone }) => {
+              const selecionada = id === categoriaId
+              return (
+                <button
+                  key={id}
+                  type="button"
+                  onClick={() => setCategoriaId(id)}
+                  aria-pressed={selecionada}
+                  className={`flex flex-col items-center gap-2 rounded-2xl border bg-card px-1 py-3 shadow-sm transition-all ${
+                    selecionada ? 'border-primary ring-2 ring-primary' : 'border-border'
+                  }`}
+                >
+                  <span
+                    className="flex h-11 w-11 items-center justify-center rounded-full"
+                    style={{ backgroundColor: fundo, color: cor }}
+                  >
+                    <Icone size={20} />
+                  </span>
+                  <span className="min-h-[28px] text-center text-[11px] font-bold leading-tight text-foreground">{nome}</span>
+                </button>
+              )
+            })}
+          </div>
+        </section>
+      )}
+
+      {/* Observação / descrição */}
+      <section>
+        <h2 className="mb-3 text-lg font-bold text-foreground">
+          {ehGasto ? 'Quer adicionar uma observação?' : 'Descrição da entrada'}
+        </h2>
+        <input
+          type="text"
+          maxLength={200}
+          value={observacao}
+          onChange={(e) => setObservacao(e.target.value)}
+          placeholder={ehGasto ? 'Ex: Lanche depois da aula' : 'Ex: Mesada, estágio, freela'}
+          className="w-full rounded-2xl border border-border bg-card px-4 py-3.5 text-sm text-foreground outline-none focus:border-primary"
+        />
+      </section>
+
+      {error && <p role="alert" className="text-sm font-semibold text-red-600">{error}</p>}
+
+      <button
+        type="button"
+        onClick={registrar}
+        disabled={!podeRegistrar || pending}
+        className="w-full rounded-2xl bg-primary py-4 text-lg font-extrabold text-primary-foreground shadow-lg shadow-primary/30 transition-all active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50"
+      >
+        {pending ? 'Salvando…' : ehGasto ? 'Registrar gasto' : 'Registrar entrada'}
+      </button>
+      </div>
       </div>
     </div>
   )

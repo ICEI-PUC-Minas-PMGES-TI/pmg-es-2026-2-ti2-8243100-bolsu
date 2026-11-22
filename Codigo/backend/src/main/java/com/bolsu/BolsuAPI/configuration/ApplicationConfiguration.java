@@ -26,6 +26,9 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 import org.springframework.web.servlet.config.annotation.CorsRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
+import java.time.Clock;
+import java.time.ZoneId;
+
 @Configuration
 @EnableWebSecurity
 public class ApplicationConfiguration {
@@ -49,6 +52,15 @@ public class ApplicationConfiguration {
                                         .scheme("bearer")
                                         .bearerFormat("JWT")));
 
+    }
+
+    /**
+     * Relógio único da aplicação, no fuso de São Paulo. Os cálculos por data ("hoje", mês atual)
+     * não podem depender do fuso do servidor, que em hospedagem costuma ser UTC.
+     */
+    @Bean
+    public Clock clock() {
+        return Clock.system(ZoneId.of("America/Sao_Paulo"));
     }
 
     @Bean

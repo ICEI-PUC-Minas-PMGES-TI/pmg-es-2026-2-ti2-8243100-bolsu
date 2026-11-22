@@ -4,6 +4,7 @@ import com.bolsu.BolsuAPI.dto.GastoDTO;
 import com.bolsu.BolsuAPI.dto.ResumoGastosDTO;
 import com.bolsu.BolsuAPI.model.Gasto;
 import com.bolsu.BolsuAPI.service.GastoService;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -30,7 +31,7 @@ public class GastoController {
     }
 
     @PostMapping
-    public ResponseEntity<Gasto> add(@RequestBody GastoDTO dto, Principal principal) {
+    public ResponseEntity<Gasto> add(@Valid @RequestBody GastoDTO dto, Principal principal) {
         LocalDate data = dto.data() != null ? dto.data() : LocalDate.now();
         Gasto gasto = gastoService.add(new Gasto(dto.categoria(), dto.valor(), data, dto.descricao()), principal.getName());
         return ResponseEntity.ok(gasto);

@@ -1,6 +1,10 @@
+import { useState } from 'react'
 import { useAuth } from '../lib/auth'
 import { createFileRoute, Link } from '@tanstack/react-router'
-import { ChevronRight, GraduationCap } from "lucide-react"
+import { ChevronLeft, ChevronRight, GraduationCap, RefreshCw, Target } from "lucide-react"
+import { useResumo, type ResumoMensal } from '../lib/resumo'
+import { deslocarMes, percentual, reais, textoVariacaoSemanal, tituloDoMes } from '../lib/resumo-mes'
+import { mesAtual } from '../lib/simulacao'
 import '@/styles.css'
 
 export const Route = createFileRoute('/inicio')({
@@ -9,157 +13,61 @@ export const Route = createFileRoute('/inicio')({
 
 function Dashboard() {
   const { user } = useAuth()
-  const userData = {
-    usuario: {
-      nome: user?.nomeCompleto.split(' ')[0] || 'Você',
-      mensagemDesempenho: "Resumo demonstrativo — valores de exemplo",
-    },
-    resumoFinanceiro: {
-      saldoDisponivel: 187.40,
-      diasRestantes: 12,
-      gastoDiarioPermitido: 15.62,
-      gastoAtual: 312.00,
-      limiteTotal: 500.00,
-      percentualComparacaoSemanaAnterior: -8,
-    },
-    resumoSemanal: {
-      orcamentoDisponivel: 187.00,
-      missoesConcluidas: 3,
-      missoesTotais: 5,
-      economiaGuardada: 24.00,
-    },
-    missaoDestaque: {
-      titulo: "Sobreviva à semana",
-      descricao: "Gaste no máximo R$ 40 com lanches até domingo.",
-      recompensaXP: 50,
-      progressoAtual: 18.00,
-      progressoAlvo: 40.00,
-    }
-  }
-
-  const progressoOrcamento = (userData.resumoFinanceiro.gastoAtual / userData.resumoFinanceiro.limiteTotal) * 100
-  const progressoMissao = (userData.missaoDestaque.progressoAtual / userData.missaoDestaque.progressoAlvo) * 100
+  const nome = user?.nomeCompleto.split(' ')[0] || 'Você'
+  const atual = mesAtual()
+  const [mes, setMes] = useState(atual)
+  const resumo = useResumo(mes)
 
   return (
     <div className="dashboard-entry flex flex-col gap-6 p-6 pt-10">
       <header className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold tracking-tight text-foreground">
-            Oi, {userData.usuario.nome} 👋
+            Oi, {nome} 👋
           </h1>
-          <p className="text-sm font-medium text-success">
-            {userData.usuario.mensagemDesempenho}
-          </p>
+          <p className="text-sm font-medium text-muted-foreground">Sua visão geral do mês</p>
         </div>
         <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10 text-primary font-bold text-lg">
-          {userData.usuario.nome.charAt(0)}
+          {nome.charAt(0)}
         </div>
       </header>
 
-      <div
-        className="relative overflow-hidden rounded-[28px] bg-primary p-6 text-primary-foreground shadow-lg shadow-primary/30"
-      >
-        <div className="absolute top-0 right-0 p-8 opacity-10">
-          <svg width="120" height="120" viewBox="0 0 24 24" fill="currentColor">
-            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z" />
-          </svg>
-        </div>
-        
-        <p className="text-sm font-medium text-primary-foreground/80 mb-1">
-          Dinheiro disponível
-        </p>
-        <div className="flex items-end gap-2 mb-1">
-          <h2 className="text-4xl font-extrabold tracking-tighter">
-            R$ {userData.resumoFinanceiro.saldoDisponivel.toFixed(2).replace('.', ',')}
-          </h2>
-        </div>
-        <p className="text-sm font-medium text-primary-foreground/90 mb-6">
-          para os próximos {userData.resumoFinanceiro.diasRestantes} dias
-        </p>
-        
-        <div className="mb-6 inline-flex rounded-full bg-black/20 px-3 py-1 text-xs font-semibold backdrop-blur-sm">
-          💰 R$ {userData.resumoFinanceiro.gastoDiarioPermitido.toFixed(2).replace('.', ',')} por dia
-        </div>
-
-        <div className="space-y-2">
-          <div className="flex justify-between text-xs font-medium text-primary-foreground/80">
-            <span>R$ {userData.resumoFinanceiro.gastoAtual} gastos</span>
-            <span>de R$ {userData.resumoFinanceiro.limiteTotal}</span>
-          </div>
-          <div className="h-2 w-full overflow-hidden rounded-full bg-black/20">
-            <div 
-              className="h-full rounded-full bg-white transition-all duration-500" 
-              style={{ width: `${progressoOrcamento}%` }}
-            />
-          </div>
-          <p className="text-xs font-medium mt-2">
-            Você gastou {Math.abs(userData.resumoFinanceiro.percentualComparacaoSemanaAnterior)}% menos que na semana passada 📉
-          </p>
-        </div>
+      <div className="flex items-center justify-between rounded-2xl border border-border bg-card px-2 py-1.5">
+        <button type="button" aria-label="Mês anterior" onClick={() => setMes(deslocarMes(mes, -1))}
+          className="rounded-xl p-2 text-foreground hover:bg-muted"><ChevronLeft size={20} /></button>
+        <span className="text-sm font-bold text-foreground" aria-live="polite">{tituloDoMes(mes)}</span>
+        <button type="button" aria-label="Próximo mês" onClick={() => setMes(deslocarMes(mes, 1))}
+          disabled={mes >= atual}
+          className="rounded-xl p-2 text-foreground hover:bg-muted disabled:opacity-30 disabled:hover:bg-transparent"><ChevronRight size={20} /></button>
       </div>
 
-      <div
-      >
-        <h3 className="text-lg font-bold mb-3">Como está sua semana?</h3>
-        <div className="flex gap-3">
-          <div className="flex flex-1 flex-col rounded-2xl bg-card border border-border p-3 shadow-sm">
-            <div className="mb-2 h-3 w-3 rounded-full bg-success" />
-            <span className="text-xs font-medium text-muted-foreground">Orçamento</span>
-            <span className="text-sm font-bold mt-1 text-foreground leading-tight">
-              R$ {userData.resumoSemanal.orcamentoDisponivel}<br />disponíveis
-            </span>
-          </div>
-          <div className="flex flex-1 flex-col rounded-2xl bg-card border border-border p-3 shadow-sm">
-            <div className="mb-2 h-3 w-3 rounded-full bg-warning" />
-            <span className="text-xs font-medium text-muted-foreground">Missão</span>
-            <span className="text-sm font-bold mt-1 text-foreground leading-tight">
-              {userData.resumoSemanal.missoesConcluidas}/{userData.resumoSemanal.missoesTotais} dias<br />concluídos
-            </span>
-          </div>
-          <div className="flex flex-1 flex-col rounded-2xl bg-card border border-border p-3 shadow-sm">
-            <div className="mb-2 h-3 w-3 rounded-full bg-blue-500" />
-            <span className="text-xs font-medium text-muted-foreground">Economia</span>
-            <span className="text-sm font-bold mt-1 text-foreground leading-tight">
-              R$ {userData.resumoSemanal.economiaGuardada}<br />guardados
-            </span>
-          </div>
+      {resumo.isPending ? (
+        <div role="status" className="rounded-3xl bg-card border border-border p-6 text-sm text-muted-foreground">
+          Carregando seu resumo…
         </div>
-      </div>
+      ) : resumo.isError ? (
+        <div role="alert" className="rounded-3xl bg-card border border-border p-6">
+          <p className="text-sm font-semibold text-foreground">{resumo.error.message}</p>
+          <button type="button" onClick={() => { void resumo.refetch() }}
+            className="mt-4 inline-flex items-center gap-2 rounded-xl bg-muted px-4 py-2 text-sm font-semibold text-foreground">
+            <RefreshCw size={16} /> Tentar novamente
+          </button>
+        </div>
+      ) : (
+        <Resumo dados={resumo.data} mesAtual={mes === atual} />
+      )}
 
-      <div
-        className="rounded-3xl bg-card border border-border p-5 shadow-sm"
-      >
-        <div className="flex items-start justify-between mb-3">
-          <div className="flex items-center gap-2">
-            <span className="text-xl">🔥</span>
-            <h3 className="font-bold text-foreground">{userData.missaoDestaque.titulo}</h3>
-          </div>
-          <div className="flex items-center gap-1 rounded-full bg-accent/20 px-2 py-0.5 text-xs font-bold text-accent-foreground">
-            +{userData.missaoDestaque.recompensaXP} <span className="text-[10px]">🪙</span>
-          </div>
-        </div>
-        <p className="text-sm text-muted-foreground mb-4">
-          {userData.missaoDestaque.descricao}
-        </p>
-        
-        <div className="space-y-1.5 mb-4">
-          <div className="flex justify-between text-xs font-bold text-foreground">
-            <span>R$ {userData.missaoDestaque.progressoAtual}</span>
-            <span className="text-muted-foreground">/ R$ {userData.missaoDestaque.progressoAlvo}</span>
-          </div>
-          <div className="h-2 w-full overflow-hidden rounded-full bg-muted">
-            <div 
-              className="h-full rounded-full bg-warning transition-all duration-500" 
-              style={{ width: `${progressoMissao}%` }} 
-            />
-          </div>
-        </div>
-
+      <div>
         <Link
           to={"/missoes" as any}
-          className="flex w-full items-center justify-center gap-1 rounded-xl bg-muted py-2.5 text-sm font-semibold text-foreground hover:bg-muted/80 transition-colors"
+          className="flex w-full items-center gap-3 rounded-3xl bg-card border border-border p-5 shadow-sm"
         >
-          Ver missão <ChevronRight size={16} />
+          <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-warning/15 text-warning"><Target size={22} /></span>
+          <span className="flex-1">
+            <strong className="block text-foreground">Missões</strong>
+            <small className="text-muted-foreground">Pequenos desafios, grandes hábitos.</small>
+          </span>
+          <ChevronRight size={18} className="text-muted-foreground" />
         </Link>
       </div>
 
@@ -192,6 +100,118 @@ function Dashboard() {
           </Link>
         </div>
       </div>
+    </div>
+  )
+}
+
+function Resumo({ dados, mesAtual }: { dados: ResumoMensal; mesAtual: boolean }) {
+  const negativo = dados.saldo < 0
+  const progressoGasto = percentual(dados.despesas, dados.entradas)
+  const variacao = mesAtual ? textoVariacaoSemanal(dados.variacaoSemanal) : ''
+  const principais = dados.categorias.slice(0, 3)
+  const maiorCategoria = principais[0]?.valor ?? 0
+
+  return (
+    <>
+      <div
+        className="relative overflow-hidden rounded-[28px] bg-primary p-6 text-primary-foreground shadow-lg shadow-primary/30"
+      >
+        <p className="text-sm font-medium text-primary-foreground/80 mb-1">
+          {negativo ? 'Saldo do mês' : 'Dinheiro disponível'}
+        </p>
+        <h2 className="text-4xl font-extrabold tracking-tighter mb-1">{reais(dados.saldo)}</h2>
+        {mesAtual && dados.diasRestantes > 0 && (
+          <p className="text-sm font-medium text-primary-foreground/90 mb-4">
+            para os próximos {dados.diasRestantes} {dados.diasRestantes === 1 ? 'dia' : 'dias'}
+          </p>
+        )}
+        {mesAtual && dados.gastoDiarioPermitido > 0 && (
+          <div className="mb-4 inline-flex rounded-full bg-black/20 px-3 py-1 text-xs font-semibold backdrop-blur-sm">
+            💰 {reais(dados.gastoDiarioPermitido)} por dia
+          </div>
+        )}
+        {negativo && (
+          <p className="text-sm font-semibold mb-4">Você gastou mais do que entrou neste mês.</p>
+        )}
+
+        {dados.entradas > 0 ? (
+          <div className="space-y-2">
+            <div className="flex justify-between text-xs font-medium text-primary-foreground/80">
+              <span>{reais(dados.despesas)} gastos</span>
+              <span>de {reais(dados.entradas)}</span>
+            </div>
+            <div className="h-2 w-full overflow-hidden rounded-full bg-black/20"
+              role="progressbar" aria-label="Despesas sobre as entradas do mês"
+              aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round(progressoGasto)}>
+              <div className="h-full rounded-full bg-white transition-all duration-500" style={{ width: `${progressoGasto}%` }} />
+            </div>
+            {variacao && <p className="text-xs font-medium mt-2">{variacao}</p>}
+          </div>
+        ) : (
+          <p className="text-xs font-medium text-primary-foreground/90">
+            Ainda não há entradas para este mês. {reais(dados.despesas)} em gastos.
+          </p>
+        )}
+        {dados.entradasEstimadas && (
+          <p className="mt-3 text-[11px] text-primary-foreground/70">
+            Entradas estimadas pela renda informada no seu cadastro.
+          </p>
+        )}
+      </div>
+
+      <div>
+        <h3 className="text-lg font-bold mb-3">Como está seu mês?</h3>
+        <div className="flex gap-3">
+          <Indicador cor="bg-success" titulo="Entradas" valor={reais(dados.entradas)} />
+          <Indicador cor="bg-warning" titulo="Despesas" valor={reais(dados.despesas)} />
+          {dados.orcamento ? (
+            <Indicador cor={dados.orcamento.restante < 0 ? 'bg-red-500' : 'bg-blue-500'} titulo="Orçamento restante"
+              valor={reais(dados.orcamento.restante)} />
+          ) : (
+            <Link to={"/orcamento" as any} className="flex flex-1 flex-col rounded-2xl bg-card border border-dashed border-border p-3 shadow-sm">
+              <div className="mb-2 h-3 w-3 rounded-full bg-blue-500" />
+              <span className="text-xs font-medium text-muted-foreground">Orçamento</span>
+              <span className="text-sm font-bold mt-1 text-foreground leading-tight">Defina seus limites</span>
+            </Link>
+          )}
+        </div>
+      </div>
+
+      <div className="rounded-3xl bg-card border border-border p-5 shadow-sm">
+        <h3 className="font-bold text-foreground mb-3">Onde você mais gastou</h3>
+        {principais.length === 0 ? (
+          <>
+            <p className="text-sm text-muted-foreground mb-4">Nenhum gasto registrado neste mês.</p>
+            <Link to={"/cadastro-gasto" as any}
+              className="flex w-full items-center justify-center rounded-xl bg-muted py-2.5 text-sm font-semibold text-foreground">
+              Registrar um gasto
+            </Link>
+          </>
+        ) : (
+          <ul className="space-y-3">
+            {principais.map(c => (
+              <li key={c.nome}>
+                <div className="flex justify-between text-sm font-semibold text-foreground">
+                  <span>{c.nome}</span><span>{reais(c.valor)}</span>
+                </div>
+                <div className="mt-1.5 h-2 w-full overflow-hidden rounded-full bg-muted">
+                  <div className="h-full rounded-full bg-primary" style={{ width: `${percentual(c.valor, maiorCategoria)}%` }} />
+                </div>
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
+    </>
+  )
+}
+
+function Indicador({ cor, titulo, valor }: { cor: string; titulo: string; valor: string }) {
+  return (
+    <div className="flex flex-1 flex-col rounded-2xl bg-card border border-border p-3 shadow-sm">
+      <div className={`mb-2 h-3 w-3 rounded-full ${cor}`} />
+      <span className="text-xs font-medium text-muted-foreground">{titulo}</span>
+      <span className="text-sm font-bold mt-1 text-foreground leading-tight">{valor}</span>
     </div>
   )
 }

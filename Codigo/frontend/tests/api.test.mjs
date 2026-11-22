@@ -56,6 +56,33 @@ test('401 atrasado de outra sessão não desconecta a nova conta', async () => {
   await request
   assert.equal(sessionToken(), 'token-b')
 })
+test('apiJson devolve o corpo JSON em respostas de sucesso', async () => {
+  globalThis.fetch = async () => new Response('{"total":42}')
+  assert.deepEqual(await apiJson('/gastos/resumo'), { total: 42 })
+})
+test('apiJson usa o campo detail quando não há message', async () => {
+  globalThis.fetch = async () => new Response('{"detail":"Dados inválidos"}', { status: 400 })
+  await assert.rejects(apiJson('/gastos'), /Dados inválidos/)
+})
+test('apiJson mostra o status quando o corpo de erro não é JSON', async () => {
+  globalThis.fetch = async () => new Response('<html>erro</html>', { status: 502 })
+  await assert.rejects(apiJson('/gastos'), /\(502\)/)
+})
+test('setSession(null) remove o token e emite o evento', () => {
+  setSession('token-a')
+  let count = 0
+  window.addEventListener(SESSION_EVENT, () => count++)
+  setSession(null)
+  assert.equal(sessionToken(), null)
+  assert.equal(count, 1)
+})
+test('sem sessão a requisição não envia Authorization', async () => {
+  globalThis.fetch = async (_, init) => {
+    assert.equal(init.headers.has('Authorization'), false)
+    return new Response('{}')
+  }
+  await apiFetch('/gastos')
+})
 test('erro da API é exibido sem apagar sessão em um erro de autorização', async () => {
   setSession('token-a')
   globalThis.fetch = async () => new Response('{"message":"Acesso negado"}', { status: 403 })
