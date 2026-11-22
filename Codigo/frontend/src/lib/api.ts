@@ -29,5 +29,6 @@ export async function apiJson<T>(path: string, init: RequestInit = {}, authentic
     const body = await response.json().catch(() => ({}))
     throw new Error(body.message || body.detail || `Não foi possível concluir a solicitação (${response.status}).`)
   }
+  if (response.status === 204) return undefined as T
   return response.json() as Promise<T>
 }

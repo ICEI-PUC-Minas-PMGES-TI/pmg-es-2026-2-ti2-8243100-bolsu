@@ -215,6 +215,17 @@ class BearerAuthenticationTest {
     }
 
     @Test
+    void devePermitirPreflightPatchDoFrontend() throws Exception {
+        mvc.perform(options("/private")
+                        .header(HttpHeaders.ORIGIN, "http://localhost:3000")
+                        .header(HttpHeaders.ACCESS_CONTROL_REQUEST_METHOD, "PATCH")
+                        .header(HttpHeaders.ACCESS_CONTROL_REQUEST_HEADERS, "Authorization, Content-Type"))
+                .andExpect(status().isOk())
+                .andExpect(result -> org.assertj.core.api.Assertions.assertThat(
+                        result.getResponse().getHeader(HttpHeaders.ACCESS_CONTROL_ALLOW_METHODS)).contains("PATCH"));
+    }
+
+    @Test
     void deveNegarLeituraAlteracaoEExclusaoDeOutraConta() throws Exception {
         String token = "Bearer " + JwtUtil.generateToken("usuario-1");
         mvc.perform(get("/users/usuario-2").header(HttpHeaders.AUTHORIZATION, token)).andExpect(status().isForbidden());

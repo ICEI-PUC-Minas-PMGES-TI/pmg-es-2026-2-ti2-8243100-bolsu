@@ -1,53 +1,82 @@
 package com.bolsu.BolsuAPI.controller;
 
+import java.security.Principal;
 import java.util.List;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.bolsu.BolsuAPI.dto.CriarGrupoRequest;
-import com.bolsu.BolsuAPI.dto.GrupoResponse;
-import com.bolsu.BolsuAPI.dto.UltimaDivisaoResponse;
-import com.bolsu.BolsuAPI.service.GastosCompartilhadosService;
+import com.bolsu.BolsuAPI.dto.AtualizarPagamentoRequest;
+import com.bolsu.BolsuAPI.dto.CriarGastoCompartilhadoRequest;
+import com.bolsu.BolsuAPI.dto.GastoCompartilhadoResponse;
+import com.bolsu.BolsuAPI.dto.PainelGastosCompartilhadosResponse;
+import com.bolsu.BolsuAPI.dto.UsuarioPesquisaResponse;
+import com.bolsu.BolsuAPI.service.GastoCompartilhadoService;
 
+/** Endpoints autenticados para convites, cotas e histórico de gastos compartilhados. */
 @RestController
 @RequestMapping("/api/gastos-compartilhados")
 public class GastosCompartilhadosController {
 
-    /** Provisório: enquanto não há autenticação, o usuário atual vem do header X-Usuario-Id. */
-    private static final String HEADER_USUARIO = "X-Usuario-Id";
-    private static final String USUARIO_PADRAO = "voce";
+    private final GastoCompartilhadoService service;
 
-    private final GastosCompartilhadosService service;
-
-    public GastosCompartilhadosController(GastosCompartilhadosService service) {
+    public GastosCompartilhadosController(GastoCompartilhadoService service) {
         this.service = service;
     }
 
-    @GetMapping("/grupos")
-    public List<GrupoResponse> listarGrupos(
-            @RequestHeader(value = HEADER_USUARIO, defaultValue = USUARIO_PADRAO) String usuarioId) {
-        return service.listarGrupos(usuarioId);
+    @GetMapping
+    public PainelGastosCompartilhadosResponse listar(Principal principal) {
+        return service.listarPainel(principal.getName());
     }
 
-    @PostMapping("/grupos")
-    public ResponseEntity<GrupoResponse> criarGrupo(
-            @RequestHeader(value = HEADER_USUARIO, defaultValue = USUARIO_PADRAO) String usuarioId,
-            @RequestBody CriarGrupoRequest request) {
-        return ResponseEntity.status(HttpStatus.CREATED).body(service.criarGrupo(usuarioId, request));
+    @PostMapping
+    public ResponseEntity<GastoCompartilhadoResponse> criar(
+            @RequestBody CriarGastoCompartilhadoRequest request,
+            Principal principal) {
+        return ResponseEntity.status(HttpStatus.CREATED).body(service.criar(principal.getName(), request));
     }
 
-    @GetMapping("/ultima-divisao")
-    public ResponseEntity<UltimaDivisaoResponse> ultimaDivisao(
-            @RequestHeader(value = HEADER_USUARIO, defaultValue = USUARIO_PADRAO) String usuarioId) {
-        return service.buscarUltimaDivisao(usuarioId)
-                .map(ResponseEntity::ok)
-                .orElseGet(() -> ResponseEntity.noContent().build());
+    @GetMapping("/usuarios")
+    public List<UsuarioPesquisaResponse> buscarUsuarios(
+            @RequestParam(defaultValue = "") String busca,
+            Principal principal) {
+        return service.buscarUsuarios(busca, principal.getName());
+    }
+
+    @GetMapping("/{gastoId}")
+    public GastoCompartilhadoResponse buscar(@PathVariable String gastoId, Principal principal) {
+        return service.buscar(gastoId, principal.getName());
+    }
+
+    @PostMapping("/{gastoId}/convite/aceitar")
+    public GastoCompartilhadoResponse aceitarConvite(@PathVariable String gastoId, Principal principal) {
+        return service.aceitarConvite(gastoId, principal.getName());
+    }
+
+    @PostMapping("/{gastoId}/convite/recusar")
+    public ResponseEntity<Void> recusarConvite(@PathVariable String gastoId, Principal principal) {
+        service.recusarConvite(gastoId, principal.getName());
+        return ResponseEntity.noContent().build();
+    }
+
+    @PatchMapping("/{gastoId}/meu-pagamento")
+    public GastoCompartilhadoResponse atualizarMeuPagamento(
+            @PathVariable String gastoId,
+            @RequestBody AtualizarPagamentoRequest request,
+            Principal principal) {
+        return service.atualizarMeuPagamento(gastoId, principal.getName(), request);
+    }
+
+    @PostMapping("/{gastoId}/encerrar")
+    public GastoCompartilhadoResponse encerrar(@PathVariable String gastoId, Principal principal) {
+        return service.encerrar(gastoId, principal.getName());
     }
 }

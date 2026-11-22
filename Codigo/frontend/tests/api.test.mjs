@@ -60,6 +60,10 @@ test('apiJson devolve o corpo JSON em respostas de sucesso', async () => {
   globalThis.fetch = async () => new Response('{"total":42}')
   assert.deepEqual(await apiJson('/gastos/resumo'), { total: 42 })
 })
+test('apiJson aceita respostas bem-sucedidas sem corpo', async () => {
+  globalThis.fetch = async () => new Response(null, { status: 204 })
+  assert.equal(await apiJson('/api/gastos-compartilhados/g1/convite/recusar', { method: 'POST' }), undefined)
+})
 test('apiJson usa o campo detail quando não há message', async () => {
   globalThis.fetch = async () => new Response('{"detail":"Dados inválidos"}', { status: 400 })
   await assert.rejects(apiJson('/gastos'), /Dados inválidos/)
