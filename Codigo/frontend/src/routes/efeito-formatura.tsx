@@ -21,6 +21,8 @@ function FormaturaPage() {
   const meses = mesesEntre(inicio, mes)
   const valido = mensal > 0 && mensal <= 100_000_000 && mes >= inicio && mes <= maxMes && meses > 0
   const total = valido ? mensal * meses : 0
+  const [ano, numeroMes] = mes.split('-').map(Number)
+  const ultimoDia = valido ? new Date(Date.UTC(ano, numeroMes, 0)).getUTCDate() : 0
 
   return <BolsuLayout formatura>
     <header className="formatura-header"><div><span className="page-eyebrow">PLANEJE SEU AMANHÃ</span><h1><GraduationCap size={25} /> Efeito Formatura</h1><p className="desktop-description">Veja como pequenas escolhas podem transformar seu futuro.</p></div><Link to="/missoes" aria-label="Voltar às missões"><X size={21} /></Link></header>
@@ -43,7 +45,9 @@ function FormaturaPage() {
       </section>
 
       <div className="simulation-action">
-        <button className="primary-button" disabled={!valido}>Quero começar a guardar <ArrowRight size={18} /></button>
+        {valido ? <Link to="/metas" search={{ total, prazo: `${mes}-${ultimoDia}` }} className="primary-button">
+          Quero começar a guardar <ArrowRight size={18} />
+        </Link> : <button className="primary-button" disabled>Quero começar a guardar <ArrowRight size={18} /></button>}
       </div>
     </div>
   </BolsuLayout>

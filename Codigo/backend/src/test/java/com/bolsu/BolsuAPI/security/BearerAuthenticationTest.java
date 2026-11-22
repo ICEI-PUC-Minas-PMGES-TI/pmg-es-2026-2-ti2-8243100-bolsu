@@ -3,8 +3,15 @@ package com.bolsu.BolsuAPI.security;
 import com.bolsu.BolsuAPI.configuration.ApplicationConfiguration;
 import com.bolsu.BolsuAPI.controller.UsuarioController;
 import com.bolsu.BolsuAPI.controller.GastoController;
+import com.bolsu.BolsuAPI.controller.MetaController;
+import com.bolsu.BolsuAPI.controller.MissaoController;
+import com.bolsu.BolsuAPI.model.Meta;
+import com.bolsu.BolsuAPI.repository.ConclusaoMissaoRepository;
+import com.bolsu.BolsuAPI.repository.MetaRepository;
+import com.bolsu.BolsuAPI.repository.MissaoRepository;
 import com.bolsu.BolsuAPI.repository.GastoRepository;
 import com.bolsu.BolsuAPI.service.GastoService;
+import com.bolsu.BolsuAPI.service.MissaoService;
 import com.bolsu.BolsuAPI.model.Gasto;
 import java.util.List;
 import static org.mockito.ArgumentMatchers.eq;
@@ -35,6 +42,8 @@ import org.springframework.web.context.support.AnnotationConfigWebApplicationCon
 import org.springframework.web.servlet.config.annotation.EnableWebMvc;
 
 import java.security.Principal;
+import java.time.LocalDate;
+import java.time.ZoneId;
 
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
@@ -257,12 +266,93 @@ class BearerAuthenticationTest {
         verifyNoInteractions(context.getBean(GastoRepository.class));
     }
 
+    @Test
+    void deveProtegerMetasECatalogoDeMissoes() throws Exception {
+        mvc.perform(get("/api/metas")).andExpect(status().isUnauthorized());
+        mvc.perform(post("/api/metas").contentType("application/json").content("{}")).andExpect(status().isUnauthorized());
+        mvc.perform(get("/api/missoes")).andExpect(status().isUnauthorized());
+        mvc.perform(get("/api/missoes/painel").header(HttpHeaders.AUTHORIZATION, "Bearer invalido"))
+                .andExpect(status().isUnauthorized());
+        mvc.perform(put("/api/missoes/bolsu-planejar-semana/conclusao").param("periodo", "unica"))
+                .andExpect(status().isUnauthorized());
+        verifyNoInteractions(context.getBean(MetaRepository.class), context.getBean(MissaoRepository.class),
+                context.getBean(ConclusaoMissaoRepository.class));
+    }
+
+    @Test
+    void deveCriarEListarMetasApenasParaContaDoToken() throws Exception {
+        MetaRepository metas = context.getBean(MetaRepository.class);
+        LocalDate prazo = LocalDate.now(ZoneId.of("America/Sao_Paulo")).plusMonths(1);
+        Meta meta = new Meta(null, "usuario-1", "Notebook", 240000, 60000, prazo);
+        Meta salva = new Meta("meta-1", "usuario-1", "Notebook", 240000, 60000, prazo);
+        when(metas.insert(meta)).thenReturn(salva);
+        when(metas.findByUsuarioIdOrderByPrazoAscIdAsc("usuario-1")).thenReturn(List.of(salva));
+        when(context.getBean(UsuarioRepository.class).existsById("usuario-2")).thenReturn(true);
+        String token = "Bearer " + JwtUtil.generateToken("usuario-1");
+        mvc.perform(post("/api/metas").header(HttpHeaders.AUTHORIZATION, token).contentType("application/json")
+                        .content("""
+                                {"nome":" Notebook ","valorDesejado":240000,"valorGuardado":60000,
+                                 "prazo":"%s","usuarioId":"usuario-2"}
+                                """.formatted(prazo)))
+                .andExpect(status().isCreated()).andExpect(jsonPath("$.id").value("meta-1"))
+                .andExpect(jsonPath("$.prazo").value(prazo.toString())).andExpect(jsonPath("$.usuarioId").doesNotExist());
+        mvc.perform(get("/api/metas").header(HttpHeaders.AUTHORIZATION, token))
+                .andExpect(status().isOk()).andExpect(jsonPath("$[0].nome").value("Notebook"));
+        mvc.perform(get("/api/metas").param("usuarioId", "usuario-1")
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + JwtUtil.generateToken("usuario-2")))
+                .andExpect(status().isOk()).andExpect(content().json("[]"));
+    }
+
+    @Test
+    void deveAtualizarMetaDoDonoMesmoComPrazoVencido() throws Exception {
+        MetaRepository metas = context.getBean(MetaRepository.class);
+        LocalDate prazo = LocalDate.now().minusDays(10);
+        when(metas.findByIdAndUsuarioId("meta-1", "usuario-1")).thenReturn(java.util.Optional.of(
+                new Meta("meta-1", "usuario-1", "Notebook", 240000, 60000, prazo)));
+        when(metas.save(any(Meta.class))).thenAnswer(chamada -> chamada.getArgument(0));
+        mvc.perform(put("/api/metas/meta-1")
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + JwtUtil.generateToken("usuario-1"))
+                        .contentType("application/json").content("""
+                                {"nome":"Notebook","valorDesejado":240000,"valorGuardado":90000,
+                                 "prazo":"%s","usuarioId":"usuario-2"}
+                                """.formatted(prazo)))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.valorGuardado").value(90000));
+        verify(metas).save(new Meta("meta-1", "usuario-1", "Notebook", 240000, 90000, prazo));
+    }
+
+    @Test
+    void deveRecusarEdicaoSemSessaoDeOutraContaEValoresInvalidos() throws Exception {
+        MetaRepository metas = context.getBean(MetaRepository.class);
+        String token = "Bearer " + JwtUtil.generateToken("usuario-1");
+        String dados = """
+                {"nome":"Notebook","valorDesejado":100,"valorGuardado":200,"prazo":"2099-12-31"}
+                """;
+        mvc.perform(put("/api/metas/meta-1").contentType("application/json").content(dados))
+                .andExpect(status().isUnauthorized());
+        mvc.perform(put("/api/metas/outra-meta").header(HttpHeaders.AUTHORIZATION, token)
+                        .contentType("application/json").content(dados))
+                .andExpect(status().isNotFound());
+        when(metas.findByIdAndUsuarioId("meta-1", "usuario-1")).thenReturn(java.util.Optional.of(
+                new Meta("meta-1", "usuario-1", "Notebook", 100, 0, LocalDate.of(2099, 12, 31))));
+        mvc.perform(put("/api/metas/meta-1").header(HttpHeaders.AUTHORIZATION, token)
+                        .contentType("application/json").content(dados))
+                .andExpect(status().isBadRequest());
+        verify(metas, never()).save(any(Meta.class));
+    }
+
     @Configuration
     @EnableWebMvc
-    @Import({ApplicationConfiguration.class, UsuarioController.class, GastoController.class, GastoService.class})
+    @Import({ApplicationConfiguration.class, UsuarioController.class, GastoController.class, GastoService.class,
+            MetaController.class, MissaoController.class, MissaoService.class})
     static class TestConfiguration {
         @Bean
         GastoRepository gastoRepository() { return mock(GastoRepository.class); }
+        @Bean
+        MetaRepository metaRepository() { return mock(MetaRepository.class); }
+        @Bean
+        MissaoRepository missaoRepository() { return mock(MissaoRepository.class); }
+        @Bean
+        ConclusaoMissaoRepository conclusaoMissaoRepository() { return mock(ConclusaoMissaoRepository.class); }
         @Bean
         UsuarioService usuarioService() {
             return mock(UsuarioService.class);

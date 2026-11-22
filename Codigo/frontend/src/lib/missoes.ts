@@ -1,5 +1,5 @@
-import { apiFetch } from './api'
-import { useQuery } from '@tanstack/react-query'
+import { apiJson } from './api'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 
 export type Missao = {
   id: string
@@ -8,22 +8,41 @@ export type Missao = {
   descricao: string
   objetivo: number
   unidade: 'CENTAVOS' | 'DIAS'
-  periodicidade: 'SEMANAL' | 'UNICA'
+  periodicidade: 'DIARIA' | 'SEMANAL' | 'UNICA'
   recompensaMoedas: number
 }
-
-
-
-async function buscarMissoes(): Promise<Missao[]> {
-  let response: Response
-  try { response = await apiFetch(`/api/missoes`) }
-  catch { throw new Error('Não foi possível conectar. Confira sua conexão e tente novamente.') }
-  if (!response.ok) throw new Error('Não foi possível carregar as missões. Tente novamente em instantes.')
-  const dados = await response.json()
-  if (!Array.isArray(dados)) throw new Error('Não foi possível carregar as missões. Tente novamente em instantes.')
-  return dados
+export type Desafio = {
+  missao: Missao
+  periodo: string
+  concluida: boolean
 }
 
+type PainelMissoes = {
+  nivel: number
+  estrelas: number
+  moedas: number
+  estrelasParaProximoNivel: number
+  desafios: Desafio[]
+}
+
+const chaveMissoes = ['painel-missoes']
+
 export function useMissoes() {
-  return useQuery({ queryKey: ['catalogo-missoes'], queryFn: buscarMissoes, retry: false })
+  return useQuery({
+    queryKey: chaveMissoes,
+    queryFn: ({ signal }) => apiJson<PainelMissoes>('/api/missoes/painel', { signal }),
+    retry: false,
+    refetchInterval: 60_000,
+  })
+}
+
+export function useConcluirMissao() {
+  const cache = useQueryClient()
+  return useMutation({
+    mutationFn: ({ missao, periodo }: Desafio) => apiJson<{ concluida: boolean }>(
+      `/api/missoes/${encodeURIComponent(missao.id)}/conclusao?periodo=${encodeURIComponent(periodo)}`,
+      { method: 'PUT' },
+    ),
+    onSuccess: () => cache.invalidateQueries({ queryKey: chaveMissoes }),
+  })
 }

@@ -15,4 +15,5 @@ public class Missao {
     public int recompensaMoedas;
     public int ordem;
     public boolean ativa;
+    public int nivelMinimo;
 }

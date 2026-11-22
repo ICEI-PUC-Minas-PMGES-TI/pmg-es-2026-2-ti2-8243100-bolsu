@@ -17,6 +17,7 @@ import { Route as GastosRouteImport } from './routes/gastos'
 import { Route as Gastos_compartilhadosRouteImport } from './routes/gastos_compartilhados'
 import { Route as InicioRouteImport } from './routes/inicio'
 import { Route as LoginRouteImport } from './routes/login'
+import { Route as MetasRouteImport } from './routes/metas'
 import { Route as MissoesRouteImport } from './routes/missoes'
 import { Route as OrcamentoRouteImport } from './routes/orcamento'
 import { Route as PerfilRouteImport } from './routes/perfil'
@@ -62,6 +63,11 @@ const LoginRoute = LoginRouteImport.update({
   path: '/login',
   getParentRoute: () => rootRouteImport,
 } as any)
+const MetasRoute = MetasRouteImport.update({
+  id: '/metas',
+  path: '/metas',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const MissoesRoute = MissoesRouteImport.update({
   id: '/missoes',
   path: '/missoes',
@@ -92,6 +98,7 @@ export interface FileRoutesByFullPath {
   '/gastos_compartilhados': typeof Gastos_compartilhadosRoute
   '/inicio': typeof InicioRoute
   '/login': typeof LoginRoute
+  '/metas': typeof MetasRoute
   '/missoes': typeof MissoesRoute
   '/orcamento': typeof OrcamentoRoute
   '/perfil': typeof PerfilRoute
@@ -106,6 +113,7 @@ export interface FileRoutesByTo {
   '/gastos_compartilhados': typeof Gastos_compartilhadosRoute
   '/inicio': typeof InicioRoute
   '/login': typeof LoginRoute
+  '/metas': typeof MetasRoute
   '/missoes': typeof MissoesRoute
   '/orcamento': typeof OrcamentoRoute
   '/perfil': typeof PerfilRoute
@@ -121,6 +129,7 @@ export interface FileRoutesById {
   '/gastos_compartilhados': typeof Gastos_compartilhadosRoute
   '/inicio': typeof InicioRoute
   '/login': typeof LoginRoute
+  '/metas': typeof MetasRoute
   '/missoes': typeof MissoesRoute
   '/orcamento': typeof OrcamentoRoute
   '/perfil': typeof PerfilRoute
@@ -137,6 +146,7 @@ export interface FileRouteTypes {
     | '/gastos_compartilhados'
     | '/inicio'
     | '/login'
+    | '/metas'
     | '/missoes'
     | '/orcamento'
     | '/perfil'
@@ -151,6 +161,7 @@ export interface FileRouteTypes {
     | '/gastos_compartilhados'
     | '/inicio'
     | '/login'
+    | '/metas'
     | '/missoes'
     | '/orcamento'
     | '/perfil'
@@ -165,6 +176,7 @@ export interface FileRouteTypes {
     | '/gastos_compartilhados'
     | '/inicio'
     | '/login'
+    | '/metas'
     | '/missoes'
     | '/orcamento'
     | '/perfil'
@@ -180,6 +192,7 @@ export interface RootRouteChildren {
   Gastos_compartilhadosRoute: typeof Gastos_compartilhadosRoute
   InicioRoute: typeof InicioRoute
   LoginRoute: typeof LoginRoute
+  MetasRoute: typeof MetasRoute
   MissoesRoute: typeof MissoesRoute
   OrcamentoRoute: typeof OrcamentoRoute
   PerfilRoute: typeof PerfilRoute
@@ -244,6 +257,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LoginRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/metas': {
+      id: '/metas'
+      path: '/metas'
+      fullPath: '/metas'
+      preLoaderRoute: typeof MetasRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/missoes': {
       id: '/missoes'
       path: '/missoes'
@@ -284,6 +304,7 @@ const rootRouteChildren: RootRouteChildren = {
   Gastos_compartilhadosRoute: Gastos_compartilhadosRoute,
   InicioRoute: InicioRoute,
   LoginRoute: LoginRoute,
+  MetasRoute: MetasRoute,
   MissoesRoute: MissoesRoute,
   OrcamentoRoute: OrcamentoRoute,
   PerfilRoute: PerfilRoute,
