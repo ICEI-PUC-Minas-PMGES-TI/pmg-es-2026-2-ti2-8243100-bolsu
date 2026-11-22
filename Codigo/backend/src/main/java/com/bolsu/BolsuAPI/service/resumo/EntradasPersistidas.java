@@ -1,19 +1,23 @@
 package com.bolsu.BolsuAPI.service.resumo;
 
-import com.bolsu.BolsuAPI.model.Entrada;
-import com.bolsu.BolsuAPI.repository.EntradaRepository;
-import org.springframework.context.annotation.Primary;
-import org.springframework.stereotype.Component;
-
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.YearMonth;
 import java.util.List;
 import java.util.Optional;
 
+import org.springframework.context.annotation.Primary;
+import org.springframework.stereotype.Component;
+
+import com.bolsu.BolsuAPI.model.Entrada;
+import com.bolsu.BolsuAPI.repository.EntradaRepository;
+
 /**
- * Entradas que o usuário registrou no mês. Quando não há nenhuma, recorre à renda informada no cadastro
- * ({@link EntradasDeclaradas}), marcada como estimativa, para a tela inicial não ficar sem saldo.
+ * Entradas do mês = renda informada no cadastro da conta ({@link EntradasDeclaradas}, quando existe)
+ * + as entradas extras que o usuário registrou no mês (freela, mesada, etc.).
+ *
+ * <p>A flag {@code estimado} continua indicando que o total inclui a renda do cadastro, que é uma estimativa.
+ * Sem renda no cadastro, o total vem só das entradas registradas e não é estimado.
  */
 @Component
 @Primary
@@ -35,11 +39,16 @@ class EntradasPersistidas implements EntradasDoMes {
                 .filter(entrada -> entrada.getData() != null && YearMonth.from(entrada.getData()).equals(mes))
                 .toList();
 
-        if (doMes.isEmpty()) return entradasDeclaradas.total(usuarioId, mes);
+        Optional<Total> base = entradasDeclaradas.total(usuarioId, mes);
+        if (doMes.isEmpty()) return base;
 
-        BigDecimal soma = doMes.stream()
+        BigDecimal extras = doMes.stream()
                 .map(entrada -> BigDecimal.valueOf(entrada.getValor()).setScale(2, RoundingMode.HALF_UP))
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
-        return Optional.of(new Total(soma.doubleValue(), false));
+        BigDecimal renda = base
+                .map(total -> BigDecimal.valueOf(total.valor()).setScale(2, RoundingMode.HALF_UP))
+                .orElse(BigDecimal.ZERO);
+
+        return Optional.of(new Total(renda.add(extras).doubleValue(), base.isPresent()));
     }
 }

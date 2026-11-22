@@ -1,252 +1,296 @@
 import { useState } from 'react'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { createFileRoute } from '@tanstack/react-router'
+import { ChevronLeft, ChevronRight } from 'lucide-react'
+import { apiFetch, apiJson } from '../lib/api'
+import { useResumo } from '../lib/resumo'
+import { deslocarMes, percentual, reais, tituloDoMes } from '../lib/resumo-mes'
+import { mesAtual } from '../lib/simulacao'
+import '@/styles.css'
 
 export const Route = createFileRoute('/orcamento')({ component: Orcamento })
 
-type LimiteCategoria = {
-  id: number
-  categoriaId: number
-  nome: string
-  emoji: string
-  limite: number
-}
+type LimiteCategoria = { id: string; categoria: string; limite: number }
 
-const MES = '2026-09'
-const NOMES_MESES = [
-  'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
-  'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro',
+// Mesmos nomes da tela de cadastro (é por eles que o resumo agrupa os gastos).
+const CATEGORIAS = [
+  { nome: 'RU / Bandejão', emoji: '🍽️' },
+  { nome: 'Lanches', emoji: '🍕' },
+  { nome: 'Transporte', emoji: '🚌' },
+  { nome: 'Rolês', emoji: '🍻' },
+  { nome: 'Xerox / Impressões', emoji: '🖨️' },
+  { nome: 'Materiais', emoji: '📚' },
+  { nome: 'Assinaturas', emoji: '🎧' },
+  { nome: 'Moradia', emoji: '🏠' },
 ]
-
-const LIMITE_TOTAL_INICIAL = 650
-
-const LIMITES_INICIAIS: LimiteCategoria[] = [
-  { id: 1, categoriaId: 1, nome: 'Alimentação', emoji: '🍔', limite: 200 },
-  { id: 2, categoriaId: 4, nome: 'Lazer', emoji: '🍿', limite: 100 },
-  { id: 3, categoriaId: 7, nome: 'Assinaturas', emoji: '🎧', limite: 50 },
-]
-
-// gastos do mês por categoria
-const GASTO_POR_CATEGORIA: Record<number, number> = {
-  1: 150,
-  4: 90,
-  7: 50,
-  3: 80,
-  6: 40,
-}
-
-const brl = (v: number) =>
-  v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL', minimumFractionDigits: 2 })
-
-const brlInteiro = (v: number) =>
-  v.toLocaleString('pt-BR', {
-    style: 'currency',
-    currency: 'BRL',
-    minimumFractionDigits: Number.isInteger(v) ? 0 : 2,
-  })
 
 // verde até 89%, laranja de 90% a 99%, vermelho a partir de 100%
 function situacao(gasto: number, limite: number) {
   const pct = limite > 0 ? (gasto / limite) * 100 : 0
-  if (pct >= 100) return { nome: 'estourado', cor: '#ef4444', borda: 'border-red-500' }
-  if (pct >= 90) return { nome: 'alerta', cor: '#f59e0b', borda: 'border-amber-500' }
-  return { nome: 'ok', cor: '#2ecc8f', borda: 'border-slate-200' }
+  if (pct >= 100) return { nome: 'estourado', barra: 'bg-red-500', borda: 'border-red-500', texto: 'text-red-500' }
+  if (pct >= 90) return { nome: 'alerta', barra: 'bg-warning', borda: 'border-warning', texto: 'text-warning' }
+  return { nome: 'ok', barra: 'bg-primary', borda: 'border-border', texto: 'text-muted-foreground' }
 }
 
-const paraNumero = (texto: string) => Number(texto.replace(',', '.'))
+const paraNumero = (texto: string) => Number(texto.trim().replace(/\./g, '').replace(',', '.'))
+const paraTexto = (n: number) => String(n).replace('.', ',')
+const norm = (s: string) => s.trim().toLowerCase()
 
 function Orcamento() {
-  const [limiteTotal, setLimiteTotal] = useState(LIMITE_TOTAL_INICIAL)
-  const [limites, setLimites] = useState<LimiteCategoria[]>(LIMITES_INICIAIS)
+  const cache = useQueryClient()
+  const atual = mesAtual()
+  const [mes, setMes] = useState(atual)
   const [editando, setEditando] = useState(false)
-
-  // campos do formulário de edição
+  const [salvando, setSalvando] = useState(false)
+  const [erro, setErro] = useState('')
   const [totalTexto, setTotalTexto] = useState('')
-  const [limitesTexto, setLimitesTexto] = useState<Record<number, string>>({})
+  const [limitesTexto, setLimitesTexto] = useState<Record<string, string>>({})
 
-  const totalGasto = Object.values(GASTO_POR_CATEGORIA).reduce((s, v) => s + v, 0)
+  const resumoQ = useResumo(mes)
+  // A chave começa com 'gastos' para atualizar junto com o resumo.
+  const limitesQ = useQuery({
+    queryKey: ['gastos', 'limites-categoria'],
+    queryFn: () => apiJson<LimiteCategoria[]>('/limites-categoria'),
+    retry: false,
+  })
+
+  const resumo = resumoQ.data
+  const limites = limitesQ.data ?? []
+  const limiteTotal = resumo?.orcamento?.limite ?? 0
+  const totalGasto = resumo?.despesas ?? 0
   const restante = limiteTotal - totalGasto
-  const pctTotal = Math.min((totalGasto / limiteTotal) * 100, 100)
+  const sitTotal = situacao(totalGasto, limiteTotal)
 
-  const [ano, mes] = MES.split('-')
-  const tituloMes = NOMES_MESES[Number(mes) - 1]
+  const limiteDe = (nome: string) => limites.find((l) => norm(l.categoria) === norm(nome))
+  const gastoDe = (nome: string) =>
+    (resumo?.categorias ?? []).filter((c) => norm(c.nome) === norm(nome)).reduce((s, c) => s + c.valor, 0)
+
+  // Categorias exibidas: as que têm limite ou gasto no mês.
+  const nomesConhecidos = CATEGORIAS.map((c) => norm(c.nome))
+  const extras = [...limites.map((l) => l.categoria), ...(resumo?.categorias ?? []).map((c) => c.nome)].filter(
+    (n, i, arr) => !nomesConhecidos.includes(norm(n)) && arr.findIndex((x) => norm(x) === norm(n)) === i,
+  )
+  const linhas = [...CATEGORIAS, ...extras.map((nome) => ({ nome, emoji: '🏷️' }))]
+    .map((c) => ({ ...c, gasto: gastoDe(c.nome), limite: limiteDe(c.nome)?.limite ?? 0 }))
+    .filter((c) => c.gasto > 0 || c.limite > 0)
 
   function abrirEdicao() {
-    setTotalTexto(String(limiteTotal))
-    setLimitesTexto(Object.fromEntries(limites.map((l) => [l.id, String(l.limite)])))
+    setErro('')
+    setTotalTexto(limiteTotal > 0 ? paraTexto(limiteTotal) : '')
+    setLimitesTexto(
+      Object.fromEntries(CATEGORIAS.map((c) => [c.nome, limiteDe(c.nome) ? paraTexto(limiteDe(c.nome)!.limite) : ''])),
+    )
     setEditando(true)
   }
 
-  const formularioValido =
-    paraNumero(totalTexto) > 0 &&
-    limites.every((l) => {
-      const n = paraNumero(limitesTexto[l.id] ?? '')
-      return !Number.isNaN(n) && n > 0
-    })
+  const totalOk = totalTexto.trim() !== '' && paraNumero(totalTexto) > 0
+  const limitesOk = CATEGORIAS.every((c) => {
+    const t = (limitesTexto[c.nome] ?? '').trim()
+    return t === '' || paraNumero(t) > 0
+  })
+  const formularioValido = totalOk && limitesOk
 
-  function salvar() {
-    if (!formularioValido) return
-    setLimiteTotal(paraNumero(totalTexto))
-    setLimites(limites.map((l) => ({ ...l, limite: paraNumero(limitesTexto[l.id]) })))
-    // por enquanto só altera na tela
-    setEditando(false)
+  async function salvar() {
+    if (!formularioValido || salvando) return
+    setSalvando(true)
+    setErro('')
+    const headers = { 'Content-Type': 'application/json' }
+    try {
+      const novoTotal = paraNumero(totalTexto)
+      if (novoTotal !== limiteTotal) {
+        await apiJson('/orcamento', { method: 'PUT', headers, body: JSON.stringify({ mes, limiteMensal: novoTotal }) })
+      }
+      for (const c of CATEGORIAS) {
+        const texto = (limitesTexto[c.nome] ?? '').trim()
+        const existente = limiteDe(c.nome)
+        if (texto === '') {
+          if (existente) {
+            const r = await apiFetch(`/limites-categoria/${existente.id}`, { method: 'DELETE' })
+            if (!r.ok) throw new Error(`Não foi possível remover o limite de ${c.nome}.`)
+          }
+        } else if (paraNumero(texto) !== existente?.limite) {
+          await apiJson('/limites-categoria', {
+            method: 'PUT',
+            headers,
+            body: JSON.stringify({ categoria: c.nome, limite: paraNumero(texto) }),
+          })
+        }
+      }
+      await cache.invalidateQueries({ queryKey: ['gastos'] })
+      setEditando(false)
+    } catch (e) {
+      setErro(e instanceof Error ? e.message : 'Não foi possível salvar os limites.')
+    } finally {
+      setSalvando(false)
+    }
   }
 
   return (
-    <div className="min-h-screen bg-[#f6f9f7] text-slate-900" style={{ fontFamily: 'Manrope, sans-serif' }}>
-      <p role="note" className="bg-amber-50 px-5 py-3 text-sm text-amber-900">Demonstração: valores de exemplo; alterações não são salvas no servidor.</p>
-      <div className="mx-auto flex min-h-screen w-full max-w-md flex-col">
-        <main className="flex-1 px-5 pb-28 pt-10">
-          {/* Cabeçalho */}
-          <header>
-            <h1 className="text-[26px] font-extrabold leading-tight">Orçamento de {tituloMes}</h1>
-            <p className="mt-1 text-sm font-semibold text-slate-500">Veja o que ainda sobrou</p>
-            <span className="sr-only">{ano}</span>
-          </header>
+    <div className="mx-auto flex w-full max-w-xl flex-col gap-6 p-6 pb-28 pt-10 lg:max-w-6xl">
+      <header>
+        <h1 className="text-2xl font-bold tracking-tight text-foreground">Orçamento</h1>
+        <p className="text-sm font-medium text-muted-foreground">Veja o que ainda sobrou</p>
+      </header>
 
-          {/* Resumo do mês */}
-          <section className="mt-6 rounded-3xl bg-white p-5 shadow-[0_4px_16px_rgba(15,23,42,0.08)]">
-            <div className="flex items-start justify-between">
-              <div>
-                <p className="text-sm text-slate-500">Total Gasto</p>
-                <p className="mt-0.5 text-2xl font-extrabold">{brl(totalGasto)}</p>
-              </div>
-              <div className="text-right">
-                <p className="text-sm text-slate-500">Restante</p>
-                <p
-                  className="mt-0.5 text-2xl font-extrabold"
-                  style={{ color: restante >= 0 ? '#2ecc8f' : '#ef4444' }}
-                >
-                  {brl(restante)}
-                </p>
-              </div>
+      <div className="flex flex-col gap-6 lg:grid lg:grid-cols-[380px_1fr] lg:items-start lg:gap-8">
+      <div className="flex flex-col gap-6">
+      <div className="flex items-center justify-between rounded-2xl border border-border bg-card px-2 py-1.5">
+        <button type="button" aria-label="Mês anterior" onClick={() => setMes(deslocarMes(mes, -1))}
+          className="rounded-xl p-2 text-foreground hover:bg-muted"><ChevronLeft size={20} /></button>
+        <span className="text-sm font-bold text-foreground" aria-live="polite">{tituloDoMes(mes)}</span>
+        <button type="button" aria-label="Próximo mês" onClick={() => setMes(deslocarMes(mes, 1))}
+          className="rounded-xl p-2 text-foreground hover:bg-muted"><ChevronRight size={20} /></button>
+      </div>
+
+      {resumoQ.isError && (
+        <div role="alert" className="rounded-3xl border border-border bg-card p-5 text-sm font-semibold text-foreground">
+          {resumoQ.error instanceof Error ? resumoQ.error.message : 'Não foi possível carregar o orçamento.'}
+        </div>
+      )}
+
+      {/* Resumo do mês */}
+      <div className="relative overflow-hidden rounded-[28px] bg-primary p-6 text-primary-foreground shadow-lg shadow-primary/30">
+        <div className="flex items-start justify-between">
+          <div>
+            <p className="mb-1 text-sm font-medium text-primary-foreground/80">Total gasto</p>
+            <h2 className="text-3xl font-extrabold tracking-tighter">{resumoQ.isPending ? '…' : reais(totalGasto)}</h2>
+          </div>
+          <div className="text-right">
+            <p className="mb-1 text-sm font-medium text-primary-foreground/80">{restante < 0 ? 'Acima do limite' : 'Restante'}</p>
+            <h2 className="text-3xl font-extrabold tracking-tighter">
+              {limiteTotal > 0 ? reais(Math.abs(restante)) : '—'}
+            </h2>
+          </div>
+        </div>
+
+        {limiteTotal > 0 ? (
+          <div className="mt-5 space-y-2">
+            <div className="flex justify-between text-xs font-medium text-primary-foreground/80">
+              <span>{reais(totalGasto)} gastos</span>
+              <span>de {reais(limiteTotal)}</span>
             </div>
-
-            <div
-              className="mt-4 h-2.5 w-full overflow-hidden rounded-full bg-slate-100"
-              role="progressbar"
-              aria-valuenow={Math.round(pctTotal)}
-              aria-valuemin={0}
-              aria-valuemax={100}
-            >
-              <div
-                className="h-full rounded-full transition-all duration-500"
-                style={{
-                  width: `${pctTotal}%`,
-                  backgroundColor: situacao(totalGasto, limiteTotal).cor,
-                }}
-              />
+            <div className="h-2 w-full overflow-hidden rounded-full bg-black/20"
+              role="progressbar" aria-label="Gastos sobre o limite do mês"
+              aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round(percentual(totalGasto, limiteTotal))}>
+              <div className="h-full rounded-full bg-white transition-all duration-500"
+                style={{ width: `${percentual(totalGasto, limiteTotal)}%` }} />
             </div>
-            <p className="mt-2 text-sm text-slate-500">Limite total: {brl(limiteTotal)}</p>
-          </section>
+            {sitTotal.nome !== 'ok' && (
+              <p className="pt-1 text-xs font-semibold">
+                {sitTotal.nome === 'estourado' ? 'Você passou do limite do mês.' : 'Atenção: você está perto do limite do mês.'}
+              </p>
+            )}
+          </div>
+        ) : (
+          <p className="mt-5 text-xs font-medium text-primary-foreground/90">Você ainda não definiu o limite deste mês.</p>
+        )}
+      </div>
 
-          {/* Por categoria */}
-          <section className="mt-7">
-            <h2 className="mb-3 text-base font-extrabold">Por categoria</h2>
-            <ul className="space-y-3">
-              {limites.map((l) => {
-                const gasto = GASTO_POR_CATEGORIA[l.categoriaId] ?? 0
-                const sit = situacao(gasto, l.limite)
-                const pct = Math.min((gasto / l.limite) * 100, 100)
-                return (
-                  <li
-                    key={l.id}
-                    className={`rounded-2xl border bg-white px-4 py-3.5 ${sit.borda}`}
-                  >
-                    <div className="flex items-center justify-between">
-                      <span className="text-[15px] font-extrabold">
-                        <span aria-hidden="true">{l.emoji} </span>
-                        {l.nome}
-                      </span>
-                      <span
-                        className="text-sm font-extrabold"
-                        style={{ color: sit.nome === 'ok' ? '#64748b' : sit.cor }}
-                      >
-                        {brlInteiro(gasto)} / {brlInteiro(l.limite)}
-                      </span>
-                    </div>
-                    <div className="mt-2.5 h-2 w-full overflow-hidden rounded-full bg-slate-100">
-                      <div
-                        className="h-full rounded-full transition-all duration-500"
-                        style={{ width: `${pct}%`, backgroundColor: sit.cor }}
-                      />
-                    </div>
-                  </li>
-                )
-              })}
-            </ul>
-          </section>
-        </main>
+      {resumo && (
+        <p className="-mt-2 text-xs text-muted-foreground">
+          Entradas: {reais(resumo.entradas)} · Saldo: {reais(resumo.saldo)}
+        </p>
+      )}
 
-        {/* Botão fixo */}
-        <footer className="fixed bottom-0 left-1/2 w-full max-w-md -translate-x-1/2 bg-[#f6f9f7] px-5 pb-5 pt-3">
-          <button
-            onClick={abrirEdicao}
-            className="w-full rounded-2xl bg-slate-100 py-4 text-base font-extrabold text-slate-900 transition-colors hover:bg-slate-200"
-          >
-            Editar limites
-          </button>
-        </footer>
+      <button
+        type="button"
+        onClick={abrirEdicao}
+        className="w-full rounded-2xl bg-card border border-border py-3.5 text-base font-bold text-foreground shadow-sm hover:bg-muted"
+      >
+        Editar limites
+      </button>
+
+      </div>
+
+      <section>
+        <h3 className="mb-3 text-lg font-bold text-foreground">Por categoria</h3>
+        {linhas.length === 0 ? (
+          <p className="rounded-2xl border border-border bg-card px-4 py-5 text-sm text-muted-foreground">
+            Nenhum gasto ou limite por categoria neste mês. Toque em “Editar limites” para definir.
+          </p>
+        ) : (
+          <ul className="grid gap-3 lg:grid-cols-2">
+            {linhas.map((l) => {
+              const sit = l.limite > 0 ? situacao(l.gasto, l.limite) : { nome: 'sem', barra: 'bg-muted', borda: 'border-border', texto: 'text-muted-foreground' }
+              return (
+                <li key={l.nome} className={`rounded-2xl border bg-card px-4 py-3.5 shadow-sm ${sit.borda}`}>
+                  <div className="flex items-center justify-between">
+                    <span className="text-[15px] font-bold text-foreground">
+                      <span aria-hidden="true">{l.emoji} </span>
+                      {l.nome}
+                    </span>
+                    <span className={`text-sm font-bold ${sit.texto}`}>
+                      {l.limite > 0 ? `${reais(l.gasto)} / ${reais(l.limite)}` : `${reais(l.gasto)} · sem limite`}
+                    </span>
+                  </div>
+                  {l.limite > 0 && (
+                    <div className="mt-2.5 h-2 w-full overflow-hidden rounded-full bg-muted">
+                      <div className={`h-full rounded-full transition-all duration-500 ${sit.barra}`}
+                        style={{ width: `${percentual(l.gasto, l.limite)}%` }} />
+                    </div>
+                  )}
+                </li>
+              )
+            })}
+          </ul>
+        )}
+      </section>
       </div>
 
       {/* Edição de limites */}
       {editando && (
-        <div className="fixed inset-0 z-30 flex items-end justify-center bg-slate-900/40">
-          <div className="max-h-[90vh] w-full max-w-md overflow-y-auto rounded-t-3xl bg-white p-5 pb-6">
-            <h2 className="text-lg font-extrabold">Editar limites</h2>
+        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/40 p-4">
+          <div className="flex max-h-[calc(100dvh-2rem)] w-full max-w-md flex-col rounded-3xl bg-card shadow-xl">
+            <h2 className="px-6 pb-2 pt-6 text-lg font-bold text-foreground">Editar limites</h2>
 
+            <div className="overflow-y-auto px-6 pb-4">
             <label className="mt-4 block">
-              <span className="text-sm font-bold text-slate-600">Limite total do mês</span>
-              <div className="mt-1.5 flex items-center rounded-2xl border border-slate-200 px-4 focus-within:border-emerald-400">
-                <span className="text-sm font-bold text-slate-400">R$</span>
+              <span className="text-sm font-bold text-muted-foreground">Limite total de {tituloDoMes(mes)}</span>
+              <div className="mt-1.5 flex items-center rounded-2xl border border-border px-4 focus-within:border-primary">
+                <span className="text-sm font-bold text-muted-foreground">R$</span>
                 <input
                   inputMode="decimal"
                   value={totalTexto}
                   onChange={(e) => setTotalTexto(e.target.value)}
-                  className="w-full bg-transparent px-2 py-3 text-sm outline-none"
+                  placeholder="0,00"
+                  className="w-full bg-transparent px-2 py-3 text-sm text-foreground outline-none"
                 />
               </div>
             </label>
 
-            <p className="mb-1 mt-5 text-sm font-bold text-slate-600">Limite por categoria</p>
+            <p className="mb-1 mt-5 text-sm font-bold text-muted-foreground">Limite por categoria (vazio = sem limite)</p>
             <div className="space-y-3">
-              {limites.map((l) => (
-                <label key={l.id} className="block">
-                  <span className="text-sm font-semibold">
-                    <span aria-hidden="true">{l.emoji} </span>
-                    {l.nome}
+              {CATEGORIAS.map((c) => (
+                <label key={c.nome} className="block">
+                  <span className="text-sm font-semibold text-foreground">
+                    <span aria-hidden="true">{c.emoji} </span>
+                    {c.nome}
                   </span>
-                  <div className="mt-1.5 flex items-center rounded-2xl border border-slate-200 px-4 focus-within:border-emerald-400">
-                    <span className="text-sm font-bold text-slate-400">R$</span>
+                  <div className="mt-1.5 flex items-center rounded-2xl border border-border px-4 focus-within:border-primary">
+                    <span className="text-sm font-bold text-muted-foreground">R$</span>
                     <input
                       inputMode="decimal"
-                      value={limitesTexto[l.id] ?? ''}
-                      onChange={(e) =>
-                        setLimitesTexto({ ...limitesTexto, [l.id]: e.target.value })
-                      }
-                      className="w-full bg-transparent px-2 py-3 text-sm outline-none"
+                      value={limitesTexto[c.nome] ?? ''}
+                      onChange={(e) => setLimitesTexto({ ...limitesTexto, [c.nome]: e.target.value })}
+                      placeholder="sem limite"
+                      className="w-full bg-transparent px-2 py-3 text-sm text-foreground outline-none"
                     />
                   </div>
                 </label>
               ))}
             </div>
 
-            <div className="mt-6 flex gap-3">
-              <button
-                onClick={() => setEditando(false)}
-                className="flex-1 rounded-2xl bg-slate-100 py-3.5 font-extrabold text-slate-600"
-              >
+            {erro && <p role="alert" className="mt-4 text-sm font-semibold text-red-600">{erro}</p>}
+            </div>
+
+            <div className="flex gap-3 border-t border-border px-6 py-4">
+              <button type="button" onClick={() => setEditando(false)}
+                className="flex-1 rounded-2xl bg-muted py-3.5 font-bold text-foreground">
                 Cancelar
               </button>
-              <button
-                onClick={salvar}
-                disabled={!formularioValido}
-                className={`flex-1 rounded-2xl py-3.5 font-extrabold ${
-                  formularioValido
-                    ? 'bg-emerald-500 text-white shadow-lg shadow-emerald-500/30'
-                    : 'bg-slate-100 text-slate-400'
-                }`}
-              >
-                Salvar
+              <button type="button" onClick={salvar} disabled={!formularioValido || salvando}
+                className="flex-1 rounded-2xl bg-primary py-3.5 font-bold text-primary-foreground shadow-lg shadow-primary/30 disabled:opacity-50">
+                {salvando ? 'Salvando…' : 'Salvar'}
               </button>
             </div>
           </div>

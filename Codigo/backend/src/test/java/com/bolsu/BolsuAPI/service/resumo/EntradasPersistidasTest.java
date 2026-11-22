@@ -1,21 +1,21 @@
 package com.bolsu.BolsuAPI.service.resumo;
 
-import com.bolsu.BolsuAPI.model.Entrada;
-import com.bolsu.BolsuAPI.repository.EntradaRepository;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-
 import java.time.LocalDate;
 import java.time.YearMonth;
 import java.util.List;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+
+import com.bolsu.BolsuAPI.model.Entrada;
+import com.bolsu.BolsuAPI.repository.EntradaRepository;
 
 class EntradasPersistidasTest {
 
@@ -52,7 +52,26 @@ class EntradasPersistidasTest {
         assertThat(total).isPresent();
         assertThat(total.get().valor()).isEqualTo(1500.5);
         assertThat(total.get().estimado()).isFalse();
-        verify(declaradas, never()).total(any(), any());
+    }
+
+    @Test
+    void somaARendaDoCadastroComAsEntradasRegistradas() {
+        when(repository.findByUsuarioId(USUARIO)).thenReturn(List.of(
+                entrada(100, LocalDate.of(2026, 11, 5)),
+                entrada(10, LocalDate.of(2026, 11, 20))));
+        when(declaradas.total(USUARIO, NOVEMBRO)).thenReturn(Optional.of(new EntradasDoMes.Total(1000, true)));
+
+        var total = entradas.total(USUARIO, NOVEMBRO);
+
+        assertThat(total).contains(new EntradasDoMes.Total(1110.0, true));
+    }
+
+    @Test
+    void entradasDeOutroMesNaoAlteramARendaDoCadastro() {
+        when(repository.findByUsuarioId(USUARIO)).thenReturn(List.of(entrada(500, LocalDate.of(2026, 10, 5))));
+        when(declaradas.total(USUARIO, NOVEMBRO)).thenReturn(Optional.of(new EntradasDoMes.Total(1000, true)));
+
+        assertThat(entradas.total(USUARIO, NOVEMBRO)).contains(new EntradasDoMes.Total(1000.0, true));
     }
 
     @Test

@@ -1,9 +1,11 @@
 import { apiFetch } from '../lib/api'
 import { useState } from 'react'
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { createFileRoute } from '@tanstack/react-router'
+import { useQuery } from '@tanstack/react-query'
+import { createFileRoute, Link } from '@tanstack/react-router'
 import {
+  BookOpen,
   Bus,
+  Home,
   PartyPopper,
   Pizza,
   Plus,
@@ -12,6 +14,11 @@ import {
   Utensils,
   type LucideIcon,
 } from 'lucide-react'
+import { useResumo } from '../lib/resumo'
+import { reais as brl } from '../lib/resumo-mes'
+import { mesAtual } from '../lib/simulacao'
+import { RegistrosRecentes } from '../components/registros-recentes'
+import '@/styles.css'
 
 export const Route = createFileRoute('/gastos')({ component: Gastos })
 
@@ -26,10 +33,6 @@ type Categoria = {
 
 const PERIODOS: Periodo[] = ['Semana', 'Mês', 'Semestre']
 
-
-
-const ORCAMENTO: Record<Periodo, number> = { Semana: 120, Mês: 500, Semestre: 3000 }
-
 // parametro que o backend espera
 const PERIODO_API: Record<Periodo, string> = { Semana: 'semana', Mês: 'mes', Semestre: 'semestre' }
 
@@ -39,49 +42,16 @@ const VISUAL: Record<string, { cor: string; icone: LucideIcon }> = {
   Lanches: { cor: '#f59e0b', icone: Pizza },
   Transporte: { cor: '#3b82f6', icone: Bus },
   Rolês: { cor: '#8b5cf6', icone: PartyPopper },
-  Xerox: { cor: '#64748b', icone: Printer },
+  'Xerox / Impressões': { cor: '#64748b', icone: Printer },
+  Materiais: { cor: '#e11d48', icone: BookOpen },
   Assinaturas: { cor: '#ec4899', icone: Smartphone },
+  Moradia: { cor: '#4f46e5', icone: Home },
+  // nome antigo, mantido para gastos já gravados
+  Xerox: { cor: '#64748b', icone: Printer },
 }
 const VISUAL_PADRAO = { cor: '#94a3b8', icone: Plus }
 
 type Resumo = { total: number; categorias: { nome: string; valor: number }[] }
-
-type Fonte = 'reais' | 'ficticios'
-
-// dados FICTÍCIOS, só para demonstração do visual
-const DEMO: Record<Periodo, { nome: string; valor: number }[]> = {
-  Semana: [
-    { nome: 'RU / Bandejão', valor: 28.5 },
-    { nome: 'Lanches', valor: 22 },
-    { nome: 'Transporte', valor: 18.4 },
-    { nome: 'Rolês', valor: 25 },
-    { nome: 'Xerox', valor: 4.5 },
-  ],
-  Mês: [
-    { nome: 'RU / Bandejão', valor: 112 },
-    { nome: 'Lanches', valor: 86.9 },
-    { nome: 'Transporte', valor: 96.8 },
-    { nome: 'Rolês', valor: 120 },
-    { nome: 'Xerox', valor: 18.5 },
-    { nome: 'Assinaturas', valor: 34.9 },
-  ],
-  Semestre: [
-    { nome: 'RU / Bandejão', valor: 640 },
-    { nome: 'Lanches', valor: 512.3 },
-    { nome: 'Transporte', valor: 580 },
-    { nome: 'Rolês', valor: 730.5 },
-    { nome: 'Xerox', valor: 96 },
-    { nome: 'Assinaturas', valor: 209.4 },
-  ],
-}
-
-const somar = (cats: { nome: string; valor: number }[]): Resumo => ({
-  total: cats.reduce((acc, c) => acc + c.valor, 0),
-  categorias: cats,
-})
-
-const brl = (v: number) =>
-  v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
 
 function Donut({ itens, total }: { itens: Categoria[]; total: number }) {
   const r = 70
@@ -113,8 +83,8 @@ function Donut({ itens, total }: { itens: Categoria[]; total: number }) {
         })}
       </svg>
       <div className="absolute inset-0 flex flex-col items-center justify-center">
-        <span className="text-xs text-slate-500">Total</span>
-        <span className="text-lg font-extrabold text-slate-900">{brl(total)}</span>
+        <span className="text-xs text-muted-foreground">Total</span>
+        <span className="text-lg font-extrabold text-foreground">{brl(total)}</span>
       </div>
     </div>
   )
@@ -122,10 +92,6 @@ function Donut({ itens, total }: { itens: Categoria[]; total: number }) {
 
 function Gastos() {
   const [periodo, setPeriodo] = useState<Periodo>('Mês')
-  const [form, setForm] = useState(false)
-  const [fonte, setFonte] = useState<Fonte>('reais')
-  const [extrasDemo, setExtrasDemo] = useState<{ nome: string; valor: number }[]>([])
-  const queryClient = useQueryClient()
 
   const { data, isLoading, isError } = useQuery<Resumo>({
     queryKey: ['gastos', periodo],
@@ -135,192 +101,115 @@ function Gastos() {
       return res.json()
     },
     retry: false,
-    enabled: fonte === 'reais',
   })
 
-  const novoGasto = useMutation({
-    mutationFn: async (g: { categoria: string; valor: number; descricao: string }) => {
-      if (fonte === 'ficticios') {
-        // modo demonstração: só guarda na memória da tela
-        setExtrasDemo((e) => [...e, { nome: g.categoria, valor: g.valor }])
-        return
-      }
-      const res = await apiFetch(`/gastos`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(g),
-      })
-      if (!res.ok) throw new Error('Falha ao salvar gasto')
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['gastos'] })
-      setForm(false)
-    },
-  })
+  // O limite vem do Orçamento do mês atual (o mesmo da tela Orçamento e da Início).
+  const orcamento = useResumo(mesAtual()).data?.orcamento ?? null
 
-  // Dados demonstrativos são exibidos somente por escolha explícita.
-  const usandoDemo = fonte === 'ficticios'
-
-  const demoResumo = somar(
-    Object.values(
-      [...DEMO[periodo], ...extrasDemo].reduce<Record<string, { nome: string; valor: number }>>((acc, c) => {
-        acc[c.nome] = { nome: c.nome, valor: (acc[c.nome]?.valor ?? 0) + c.valor }
-        return acc
-      }, {}),
-    ),
-  )
-  const resumo: Resumo = usandoDemo ? demoResumo : (data ?? { total: 0, categorias: [] })
-
+  const resumo: Resumo = data ?? { total: 0, categorias: [] }
   const categorias: Categoria[] = resumo.categorias.map((c) => ({
     nome: c.nome,
     valor: c.valor,
     ...(VISUAL[c.nome] ?? VISUAL_PADRAO),
   }))
   const total = resumo.total
-  const restante = ORCAMENTO[periodo] - total
-  const grafico = categorias
 
   return (
-    <div className="min-h-screen bg-[#f6f9f7] text-slate-900" style={{ fontFamily: 'Manrope, sans-serif' }}>
-      <div className="mx-auto w-full max-w-2xl pb-28 lg:max-w-none lg:pb-12">
-        {/* Cabeçalho */}
-        <header className="border-b border-slate-200/70 bg-white px-5 pb-4 pt-8 lg:flex lg:items-center lg:justify-between lg:px-10 lg:py-6">
-          <h1 className="text-[22px] font-extrabold lg:text-3xl">Seus gastos</h1>
-          <div className="mt-4 flex gap-2 lg:mt-0">
-            {PERIODOS.map((p) => (
-              <button
-                key={p}
-                onClick={() => setPeriodo(p)}
-                className={`rounded-full px-4 py-1.5 text-[13px] font-semibold transition-colors ${
-                  p === periodo
-                    ? 'bg-emerald-500 text-white'
-                    : 'bg-slate-100 text-slate-500 hover:bg-slate-200'
-                }`}
-              >
-                {p}
-              </button>
-            ))}
-          </div>
-        </header>
+    <div className="flex flex-col gap-6 p-6 pb-28 pt-10 lg:mx-auto lg:w-full lg:max-w-6xl">
+      {/* Cabeçalho */}
+      <header className="flex flex-wrap items-center justify-between gap-3">
+        <h1 className="text-2xl font-bold tracking-tight text-foreground">Seus gastos</h1>
+        <div className="flex gap-2">
+          {PERIODOS.map((p) => (
+            <button
+              key={p}
+              type="button"
+              onClick={() => setPeriodo(p)}
+              className={`rounded-full px-4 py-1.5 text-[13px] font-semibold transition-colors ${
+                p === periodo ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground hover:bg-muted/70'
+              }`}
+            >
+              {p}
+            </button>
+          ))}
+        </div>
+      </header>
 
-        <div className="flex flex-wrap items-center gap-3 px-5 pt-4 lg:px-10">
-          <div className="flex gap-1 rounded-full bg-slate-200/60 p-1 text-[12px] font-semibold">
-            {(['reais', 'ficticios'] as Fonte[]).map((f) => (
-              <button
-                key={f}
-                onClick={() => setFonte(f)}
-                className={`rounded-full px-3 py-1 transition-colors ${
-                  f === fonte ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500'
-                }`}
-              >
-                {f === 'reais' ? 'Dados reais' : 'Dados fictícios'}
-              </button>
-            ))}
+      {isError && (
+        <p role="alert" className="text-sm font-semibold text-red-600">
+          Não foi possível carregar seus gastos. Tente novamente mais tarde.
+        </p>
+      )}
+      {isLoading && <p role="status" className="text-sm text-muted-foreground">Carregando seus gastos…</p>}
+
+      <main className="grid gap-6 lg:grid-cols-[380px_1fr] lg:items-start lg:gap-8">
+        {/* Resumo + gráfico */}
+        <div className="space-y-6 rounded-3xl border border-border bg-card p-5 shadow-sm">
+          <div className="grid grid-cols-2 gap-3">
+            <div className="rounded-2xl border border-border bg-muted p-4">
+              <p className="text-[11px] font-bold tracking-wider text-muted-foreground">GASTOS</p>
+              <p className="mt-1 text-xl font-extrabold text-foreground">{brl(total)}</p>
+            </div>
+            <div className="rounded-2xl border border-primary/20 bg-primary/10 p-4">
+              <p className="text-[11px] font-bold tracking-wider text-primary">RESTANTE DO MÊS</p>
+              {orcamento ? (
+                <p className={`mt-1 text-xl font-extrabold ${orcamento.restante >= 0 ? 'text-primary' : 'text-red-500'}`}>
+                  {brl(orcamento.restante)}
+                </p>
+              ) : (
+                <Link to="/orcamento" className="mt-1 block text-sm font-bold text-primary underline">
+                  Definir orçamento
+                </Link>
+              )}
+            </div>
           </div>
-          {usandoDemo && (
-            <span className="rounded-full bg-amber-100 px-3 py-1 text-[12px] font-semibold text-amber-800">
-              Modo demonstração: valores inventados
-            </span>
-          )}
+          <Donut itens={categorias} total={total} />
         </div>
 
-        {fonte === 'reais' && isError && <p role="alert" className="px-5 py-3 text-red-600">Não foi possível carregar seus gastos. Tente novamente mais tarde.</p>}
-        {fonte === 'reais' && isLoading && <p role="status" className="px-5 py-3">Carregando seus gastos…</p>}
-        <p className="px-5 pt-3 text-sm text-slate-500">O limite de orçamento desta tela ainda é demonstrativo.</p>
-        <main className="mx-auto grid max-w-6xl gap-6 px-5 pt-5 lg:grid-cols-[380px_1fr] lg:items-start lg:gap-8 lg:px-10 lg:pt-8">
-          {/* Resumo + gráfico */}
-          <div className="space-y-6 lg:rounded-3xl lg:border lg:border-slate-100 lg:bg-white lg:p-6 lg:shadow-[0_2px_12px_rgba(15,23,42,0.06)]">
-            <div className="grid grid-cols-2 gap-3">
-              <div className="rounded-2xl border border-slate-200 bg-slate-100 p-4">
-                <p className="text-[11px] font-bold tracking-wider text-slate-500">GASTOS</p>
-                <p className="mt-1 text-xl font-extrabold">{brl(total)}</p>
-              </div>
-              <div className="rounded-2xl border border-emerald-200 bg-emerald-50 p-4">
-                <p className="text-[11px] font-bold tracking-wider text-emerald-700">RESTANTE</p>
-                <p
-                  className={`mt-1 text-xl font-extrabold ${
-                    restante >= 0 ? 'text-emerald-500' : 'text-red-500'
-                  }`}
+        {/* Lista por categoria */}
+        <section>
+          <h2 className="mb-3 text-lg font-bold text-foreground">Por categoria</h2>
+          {!isLoading && categorias.length === 0 && (
+            <p className="text-sm text-muted-foreground">Nenhum gasto nesse período.</p>
+          )}
+          <ul className="grid gap-3 sm:grid-cols-2">
+            {categorias.map(({ nome, valor, cor, icone: Icone }) => (
+              <li
+                key={nome}
+                className="flex items-center gap-3 rounded-2xl border border-border bg-card p-3.5 shadow-sm"
+              >
+                <span
+                  className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-white"
+                  style={{ backgroundColor: cor }}
                 >
-                  {brl(restante)}
-                </p>
-              </div>
-            </div>
-            <Donut itens={grafico} total={total} />
-          </div>
+                  <Icone size={18} />
+                </span>
+                <div className="min-w-0 flex-1">
+                  <p className="truncate text-sm font-bold text-foreground">{nome}</p>
+                  <p className="text-xs text-muted-foreground">
+                    {total > 0 ? Math.round((valor / total) * 100) : 0}% dos gastos
+                  </p>
+                </div>
+                <span className="text-[15px] font-extrabold text-foreground">{brl(valor)}</span>
+              </li>
+            ))}
+          </ul>
+        </section>
 
-          {/* Lista por categoria */}
-          <section>
-            <h2 className="mb-3 text-base font-extrabold lg:text-lg">Por categoria</h2>
-            {fonte === 'reais' && isLoading && <p className="text-sm text-slate-500">Carregando...</p>}
-            {!isLoading && categorias.length === 0 && (
-              <p className="text-sm text-slate-500">Nenhum gasto nesse período.</p>
-            )}
-            <ul className="grid gap-3 sm:grid-cols-2">
-              {categorias.map(({ nome, valor, cor, icone: Icone }) => (
-                <li
-                  key={nome}
-                  className="flex items-center gap-3 rounded-2xl border border-slate-100 bg-white p-3.5 shadow-[0_2px_8px_rgba(15,23,42,0.08)]"
-                >
-                  <span
-                    className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-white"
-                    style={{ backgroundColor: cor }}
-                  >
-                    <Icone size={18} />
-                  </span>
-                  <div className="min-w-0 flex-1">
-                    <p className="truncate text-sm font-bold">{nome}</p>
-                    <p className="text-xs text-slate-500">
-                      {total > 0 ? Math.round((valor / total) * 100) : 0}% dos gastos
-                    </p>
-                  </div>
-                  <span className="text-[15px] font-extrabold">{brl(valor)}</span>
-                </li>
-              ))}
-            </ul>
-          </section>
-        </main>
-      </div>
+        <div className="lg:col-span-2">
+          <RegistrosRecentes />
+        </div>
+      </main>
 
-      <button
-        aria-label="Adicionar gasto"
-        onClick={() => setForm(true)}
-        className="fixed bottom-6 right-5 z-20 flex h-12 items-center justify-center gap-2 rounded-full bg-emerald-500 px-3.5 font-bold text-white shadow-lg shadow-emerald-500/40 transition-transform active:scale-95 lg:bottom-8 lg:right-10 lg:px-5"
+      {/* Novo gasto/entrada: leva ao Cadastro */}
+      <Link
+        to="/cadastro-gasto"
+        aria-label="Adicionar gasto ou entrada"
+        className="fixed bottom-24 right-5 z-40 flex h-12 items-center justify-center gap-2 rounded-full bg-primary px-3.5 font-bold text-primary-foreground shadow-lg shadow-primary/40 transition-transform active:scale-95 lg:bottom-8 lg:right-10 lg:px-5"
       >
         <Plus size={24} />
-        <span className="hidden lg:inline">Novo gasto</span>
-      </button>
-
-      {form && (
-        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/40 p-4">
-          <form
-            className="w-full max-w-sm space-y-3 rounded-2xl bg-white p-5"
-            onSubmit={(e) => {
-              e.preventDefault()
-              const f = new FormData(e.currentTarget)
-              novoGasto.mutate({
-                categoria: String(f.get('categoria')),
-                valor: Number(f.get('valor')),
-                descricao: String(f.get('descricao') ?? ''),
-              })
-            }}
-          >
-            <h2 className="text-lg font-extrabold">Novo gasto</h2>
-            <select name="categoria" className="w-full rounded-lg border p-2">
-              {Object.keys(VISUAL).map((n) => (
-                <option key={n}>{n}</option>
-              ))}
-            </select>
-            <input name="valor" type="number" step="0.01" min="0" required placeholder="Valor (R$)" className="w-full rounded-lg border p-2" />
-            <input name="descricao" placeholder="Descrição (opcional)" className="w-full rounded-lg border p-2" />
-            {novoGasto.isError && <p className="text-sm text-red-500">Erro ao salvar.</p>}
-            <div className="flex justify-end gap-2">
-              <button type="button" onClick={() => setForm(false)} className="rounded-full px-4 py-2 text-sm">Cancelar</button>
-              <button type="submit" disabled={novoGasto.isPending} className="rounded-full bg-emerald-500 px-4 py-2 text-sm font-bold text-white">Salvar</button>
-            </div>
-          </form>
-        </div>
-      )}
+        <span className="hidden lg:inline">Novo registro</span>
+      </Link>
     </div>
   )
 }
