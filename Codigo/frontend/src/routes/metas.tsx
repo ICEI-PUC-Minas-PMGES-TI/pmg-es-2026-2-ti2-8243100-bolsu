@@ -149,4 +149,3 @@ function ListaMetas({ hoje, editar }: { hoje: string; editar: (meta: Meta) => vo
       </li>)}</ul>}
   </section>
 }
-
