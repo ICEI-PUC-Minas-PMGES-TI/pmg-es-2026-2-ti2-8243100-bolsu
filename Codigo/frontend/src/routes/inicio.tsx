@@ -4,6 +4,7 @@ import { createFileRoute } from '@tanstack/react-router'
 import { RefreshCw } from 'lucide-react'
 import { useResumo } from '../lib/resumo'
 import { mesAtual } from '../lib/simulacao'
+import { AtalhosMobile } from '../components/home/AtalhosMobile'
 import { EfeitoFormaturaCard } from '../components/home/EfeitoFormaturaCard'
 import { IndicadoresMes } from '../components/home/IndicadoresMes'
 import { MissoesLink } from '../components/home/MissoesLink'
@@ -63,6 +64,7 @@ function Dashboard() {
           ) : (
             <>
               <SaldoCard dados={resumo.data} mesAtual={mes === atual} />
+              <AtalhosMobile />
               <IndicadoresMes dados={resumo.data} />
             </>
           )}
