@@ -110,7 +110,7 @@ public class ApplicationConfiguration {
             @Override
             public void addCorsMappings(CorsRegistry registry){
                 registry.addMapping("/**") // Aplica a todas as rotas
-                        .allowedOrigins("http://localhost:3000", "http://127.0.0.1:3000") // Frontend local
+                        .allowedOrigins("https://bolsu-eight.vercel.app/") // Frontend local
                         .allowedMethods("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS")
                         .allowedHeaders("*")
                         .allowCredentials(true);
